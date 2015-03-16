@@ -1,0 +1,22 @@
+{
+    "name": "mundanity/restapi",
+    "description": "A Rest API module for Drupal",
+    "homepage": "https://github.com/mundanity/restapi",
+    "authors": [
+        {
+            "name": "Owen Loy",
+            "email": "owen@mundanity.com"
+        }
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "~5.3",
+        "symfony/http-foundation": "~2.6"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.5.0"
+    },
+    "autoload": {
+        "psr-4": {"Drupal\\restapi\\": "src/"}
+    }
+}

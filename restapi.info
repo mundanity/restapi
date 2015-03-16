@@ -1,0 +1,7 @@
+name = "Rest API"
+description = "REST API module"
+version = 7.x-1.0
+core = 7.x
+php = 5.5
+
+dependencies[] = xautoload
