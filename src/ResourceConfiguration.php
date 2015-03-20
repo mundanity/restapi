@@ -252,7 +252,7 @@ class ResourceConfiguration {
    *
    */
   protected function getMaskedPath() {
-    return '#^'. str_replace('%', '.[^/]*', $this->getPath()) . '$#';
+    return '#^' . str_replace('%', '.[^/]*', $this->getPath()) . '$#';
   }
 
 
