@@ -29,12 +29,7 @@ abstract class AbstractAuthenticationService implements AuthenticationServiceInt
 
 
   /**
-   * Constructor
-   *
-   * @param \StdClass $user
-   *   A Drupal user object.
-   * @param Request $request
-   *   A Symfony HTTP Request object.
+   * {@inheritdoc}
    *
    */
   public function __construct(\StdClass $user, Request $request) {
