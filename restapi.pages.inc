@@ -36,6 +36,11 @@ function restapi_page_callback(ResourceConfiguration $resource, $user, Request $
   module_invoke_all('restapi_request', $resource, $request);
 
   $obj = $resource->invokeResource($user, $request);
+
+  if (!$obj->access()) {
+    return MENU_ACCESS_DENIED;
+  }
+
   $obj->before();
   $response = call_user_func_array([$obj, $method], $args);
 

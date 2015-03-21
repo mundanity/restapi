@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 // Expose additional page / menu callback results for our delivery callback.
 define('RESTAPI_METHOD_NOT_ALLOWED', 405);
+define('RESTAPI_ACCESS_DENIED', 403);
 
 
 /**
@@ -122,10 +123,12 @@ function restapi_delivery_callback($response) {
         ]);
         break;
 
+      // This request failed the access check in hook_menu(). For restapi
+      // requests, this is assumed to be an authentication check.
       case MENU_ACCESS_DENIED:
-        $error   = 'forbidden';
+        $error   = 'unauthenticated';
         $status  = 403;
-        $message = t('You do not have permission to access this resource.');
+        $message = t('Your credentials could not be verified.');
         break;
 
       case MENU_SITE_OFFLINE:
@@ -134,12 +137,26 @@ function restapi_delivery_callback($response) {
         $message = t('This resource is temporarily offline.');
         break;
 
+      // The request was authenticated, but subsequently failed an access check
+      // on the specific resource. This is assumed to be an authorization check.
+      case RESTAPI_ACCESS_DENIED:
+        $error   = 'unauthorized';
+        $status  = 403;
+        $message = t('You do not have permission to access this resource.');
+        break;
+
       case RESTAPI_METHOD_NOT_ALLOWED:
         $error   = 'not_allowed';
         $status  = 405;
         $message = t("This resource can not be accessed via @method", [
           '@method' => $request->getMethod(),
         ]);
+        break;
+
+      default:
+        $error   = 'unknown';
+        $status  = 500;
+        $message = t('An unknown error occurred. Sorry.');
         break;
     }
 
