@@ -42,7 +42,7 @@ abstract class AbstractResource implements ResourceInterface {
    * {@inheritdoc}
    *
    */
-  public function access() {
+  public function access($method = 'get') {
     return TRUE;
   }
 

@@ -33,10 +33,13 @@ interface ResourceInterface {
    * Determines whether this resource can be accessed by the current user /
    * request.
    *
+   * @param string $method
+   *   The lowercased HTTP method that is being called. (e.g. "get").
+   *
    * @return boolean
    *
    */
-  public function access();
+  public function access($method = 'get');
 
 
   /**

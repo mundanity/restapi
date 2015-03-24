@@ -37,7 +37,7 @@ function restapi_page_callback(ResourceConfiguration $resource, $user, Request $
 
   $obj = $resource->invokeResource($user, $request);
 
-  if (!$obj->access()) {
+  if (!$obj->access($method)) {
     return MENU_ACCESS_DENIED;
   }
 
