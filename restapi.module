@@ -32,6 +32,7 @@ function restapi_menu() {
       'access arguments'  => [$resource],
       'delivery callback' => 'restapi_delivery_callback',
       'file'              => 'restapi.pages.inc',
+      'type'              => MENU_CALLBACK,
     ];
   }
 
