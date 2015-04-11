@@ -3,8 +3,6 @@
 namespace Drupal\restapi;
 
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 
 /**
@@ -58,7 +56,7 @@ abstract class AbstractResource implements ResourceInterface {
    * {@inheritdoc}
    *
    */
-  public function after(Response $response) {}
+  public function after(JsonResponse $response) {}
 
 
   /**
@@ -89,6 +87,19 @@ abstract class AbstractResource implements ResourceInterface {
    */
   public function toJson($data, $status = 200) {
     return JsonResponse::create($data, $status);
+  }
+
+
+  /**
+   * {@inheritdoc}
+   *
+   */
+  public function toError($message, $code = 'system', $status = 500) {
+    $data = [
+      'error'   => $code,
+      'message' => $message,
+    ];
+    return $this->toJson($data, $status);
   }
 
 }

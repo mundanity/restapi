@@ -233,4 +233,37 @@ class JsonRequestTest extends PHPUnit_Framework_TestCase {
 
   }
 
+
+  public function testSetDataWorksAsAdvertised() {
+
+    $request = new JsonRequest();
+    $request->initialize(
+      ['foo' => 'fooget', 'bar' => 'barget'], // Query
+      ['foo' => 'foopost', 'bar' => 'barpost'], // Request
+      [], // Attributes
+      [], // Cookies
+      [], // Files
+      $this->server, // Server
+      $this->content
+    );
+
+    $data = [
+      'new' => 'value',
+      'foo' => 'newfoo',
+    ];
+
+    $request->setData($data);
+
+    $this->assertEquals($request->query->get('new'), 'value');
+    $this->assertEquals($request->query->get('foo'), 'newfoo');
+
+    $request->setMethod('PATCH');
+
+    $request->setData($data);
+
+    $this->assertEquals($request->request->get('new'), 'value');
+    $this->assertEquals($request->request->get('foo'), 'newfoo');
+
+  }
+
 }

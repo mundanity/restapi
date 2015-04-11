@@ -55,12 +55,6 @@ class ResourceConfigurationTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals('my_module', $config->getModule());
     $this->assertEquals($this->class, $config->getClass());
     $this->assertEquals($this->auth, $config->getAuthenticationClass());
-    $this->assertEquals(array(1), $config->getArgIndexes());
-
-    $config = new ResourceConfiguration('path/%/%/resource', 'my_module', $this->class, $this->auth);
-
-    $this->assertEquals(array(1, 2), $config->getArgIndexes());
-
   }
 
 

@@ -45,6 +45,22 @@ class JsonRequest extends Request {
 
 
   /**
+   * Sets data on the request object. This will override any current data in the
+   * request.
+   *
+   * @param array $data
+   *
+   */
+  public function setData(array $data = []) {
+    $param_bag = strtolower($this->getMethod()) == 'get' ? 'query' : 'request';
+
+    foreach($data as $key => $value) {
+      $this->{$param_bag}->set($key, $value);
+    }
+  }
+
+
+  /**
    * Returns the API version.
    *
    * @return int $version

@@ -3,8 +3,7 @@
 namespace Drupal\restapi;
 
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use Exception;
 
 
 /**
@@ -13,6 +12,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  * Implementing classes should add one or more methods that correspond to the
  * HTTP method desired. (e.g. MyResource::get() to response to a GET request).
  * These methods must return a Symfony Response object.
+ *
+ *
  *
  */
 interface ResourceInterface {
@@ -33,10 +34,15 @@ interface ResourceInterface {
    * Determines whether this resource can be accessed by the current user /
    * request.
    *
-   * @param string $method
-   *   The lowercased HTTP method that is being called. (e.g. "get").
+   * In case of access failure, this method must throw an appropriate
+   * exception.
    *
-   * @return boolean
+   * @param string $method
+   *   The lowercase HTTP method that is being called. (e.g. "get"). The HTTP
+   *   method can be derived from the request object, but is provided here for
+   *   convenience.
+   *
+   * @throws Exception
    *
    */
   public function access($method = 'get');
@@ -45,7 +51,9 @@ interface ResourceInterface {
   /**
    * Handles logic before the main request is processed.
    *
-   * @return void
+   * In the case of failure, this method must throw an appropriate exception.
+   *
+   * @throws Exception
    *
    */
   public function before();
@@ -55,12 +63,15 @@ interface ResourceInterface {
    * Handles logic after the main request is processed. The response can be
    * altered at this time.
    *
-   * @param Response $response
+   * In the case of failure, this method must throw an appropriate exception.
    *
-   * @return void
+   * @param JsonResponse $response
+   *   The response object after the request has been handled.
+   *
+   * @throws Exception
    *
    */
-  public function after(Response $response);
+  public function after(JsonResponse $response);
 
 
   /**
@@ -75,5 +86,22 @@ interface ResourceInterface {
    *
    */
   public function toJson($data, $status = 200);
+
+
+  /**
+   * Helper method to return a JSON error response.
+   *
+   * @param string $message
+   *   The error message.
+   * @param string $code
+   *   The error code to include in the response. This is typically a machine
+   *   name representation of the error. (e.g. "unauthorized" or "not_allowed")
+   * @param int $status
+   *   The HTTP status code for this response.
+   *
+   * @return JsonResponse
+   *
+   */
+  public function toError($message, $code = 'system', $status = 500);
 
 }

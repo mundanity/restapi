@@ -37,13 +37,13 @@ function hook_restapi_resources() {
  *
  * @param Drupal\restapi\ResourceConfiguration $resource
  *   A ResourceConfiguration object.
- * @param Symfony\Component\HttpFoundation\Request $request
+ * @param Drupal\restapi\JsonRequest $request
  *   The request object.
  *
  */
 function hook_restapi_request(
   Drupal\restapi\ResourceConfiguration $resource,
-  Symfony\Component\HttpFoundation\Request $request) {
+  Drupal\restapi\JsonRequest $request) {
 
 
 }
@@ -57,17 +57,16 @@ function hook_restapi_request(
  *
  * @param Drupal\restapi\ResourceConfiguration $resource
  *   A ResourceConfiguration object.
- * @param Symfony\Component\HttpFoundation\Request $request
+ * @param Drupal\restapi\JsonRequest $request
  *   A read only copy of the request object.
- * @param Symfony\Component\HttpFoundation\Response $response
+ * @param Drupal\restapi\JsonResponse $response
  *   The response object.
  *
  */
 function hook_restapi_response(
   Drupal\restapi\ResourceConfiguration $resource,
-  Symfony\Component\HttpFoundation\Request $request,
-  Symfony\Component\HttpFoundation\Response $response) {
-
+  Drupal\restapi\JsonRequest $request,
+  Drupal\restapi\JsonResponse $response) {
 
 
 }

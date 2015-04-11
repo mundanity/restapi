@@ -9,7 +9,11 @@ use Symfony\Component\HttpFoundation\Request;
 
 
 /**
- * A configuration object for a endpoint.
+ * A configuration object for a resource.
+ *
+ * The configuration object holds metadata about the resource, and acts as a
+ * factory for the main resource class and it's associated authentication
+ * handler.
  *
  */
 class ResourceConfiguration {
@@ -204,27 +208,6 @@ class ResourceConfiguration {
 
 
   /**
-   * Returns an array of integers corresponding to the index of variables
-   * within the path.
-   *
-   * @return array
-   *
-   */
-  public function getArgIndexes() {
-    $parts = explode('/', $this->getPath());
-    $args  = [];
-
-    foreach($parts as $index => $part) {
-      if ($part === '%') {
-        $args[] = $index;
-      }
-    }
-
-    return $args;
-  }
-
-
-  /**
    * Determines if this resource will be matched to the provided path.
    *
    * The resource will match either a raw path (e.g. "items/%/thing") or a real
@@ -242,11 +225,32 @@ class ResourceConfiguration {
 
 
   /**
+   * Returns an array of integers corresponding to the index of variables
+   * within the path.
+   *
+   * @return array
+   *
+   */
+  protected function getArgIndexes() {
+    $parts = explode('/', $this->getPath());
+    $args  = [];
+
+    foreach($parts as $index => $part) {
+      if ($part === '%') {
+        $args[] = $index;
+      }
+    }
+
+    return $args;
+  }
+
+
+  /**
    * Returns the regex masked path for this resource.
    *
    * Essentially, replaces any variable substitutions with a regex pattern
-   * patching the variable. (e.g. "items/%/thing" becomes
-   * "/items\/[^/$]*\/thing".
+   * matching the variable. (e.g. "items/%/thing" becomes
+   * "/items\/[^/]*\/thing".
    *
    * @return string
    *

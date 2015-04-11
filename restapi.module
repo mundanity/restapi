@@ -1,14 +1,11 @@
 <?php
 
-use Drupal\restapi\ResourceConfiguration;
+use Drupal\restapi\Api;
 use Drupal\restapi\JsonRequest;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\JsonResponse;
-
-// Expose additional page / menu callback results for our delivery callback.
-define('RESTAPI_METHOD_NOT_ALLOWED', 405);
-define('RESTAPI_ACCESS_DENIED', 403);
+use Drupal\restapi\JsonResponse;
+use Drupal\restapi\ResourceConfiguration;
+use Drupal\restapi\Exception\ClassNotValidException;
+use Drupal\restapi\Exception\AuthClassNotValidException;
 
 
 /**
@@ -22,16 +19,11 @@ function restapi_menu() {
 
   foreach($resources as $resource) {
 
-    $args = $resource->getArgIndexes();
-    array_unshift($args, $resource);
-
     $items[$resource->getPath()] = [
-      'page callback'     => '_restapi_page_callback',
-      'page arguments'    => $args,
+      'page callback'     => 'restapi_page_callback',
       'access callback'   => 'restapi_access_callback',
       'access arguments'  => [$resource],
       'delivery callback' => 'restapi_delivery_callback',
-      'file'              => 'restapi.pages.inc',
       'type'              => MENU_CALLBACK,
     ];
   }
@@ -56,7 +48,7 @@ function restapi_menu() {
  */
 function restapi_xautoload($adapter) {
   if (module_exists('composer_manager')) {
-    $dir  = composer_manager_vendor_dir() . '/vendor/composer';
+    $dir = composer_manager_vendor_dir() . '/vendor/composer';
     $adapter->absolute()->composerDir($dir);
   }
 
@@ -85,22 +77,64 @@ function restapi_modules_disabled($modules) {
 
 
 /**
+ * Implements hook_restapi_request().
+ *
+ */
+function restapi_restapi_request(ResourceConfiguration $resource, JsonRequest $request) {
+
+  if (variable_get('restapi_debug')) {
+    timer_start('restapi-' . $resource->getPath());
+  }
+
+}
+
+
+/**
+ * Implements hook_restapi_response().
+ *
+ */
+function restapi_restapi_response(ResourceConfiguration $resource, JsonRequest $request, JsonResponse $response) {
+
+  if (variable_get('restapi_debug')) {
+    $timer = timer_stop('restapi-' . $resource->getPath());
+    $response->headers->set('X-Debug-Call-Time', $timer['time'] . 'ms');
+  }
+
+}
+
+
+/**
+ * Page callback to handle an API call from the Drupal menu system.
+ *
+ * @return JsonResponse
+ *
+ */
+function restapi_page_callback() {
+
+  global $user;
+
+  $request = restapi_get_request();
+  $api     = new Api($user, $request);
+
+  return $api->call($request->getMethod(), current_path());
+
+}
+
+
+/**
  * Handles the authentication.
  *
  * @param ResourceConfiguration $resource
  *   The resource that is being accessed, as defined in restapi_get_resources().
- * @param Request $request
- *   An optional Request object to override the current context (mainly for
- *   testing purposes).
  *
  * @return boolean
  *
  */
-function restapi_access_callback(ResourceConfiguration $resource, Request $request = NULL) {
+function restapi_access_callback(ResourceConfiguration $resource) {
 
   global $user;
 
-  $request = $request ?: restapi_get_request();
+  $request = restapi_get_request();
   $auth    = $resource->invokeAuthenticationService($user, $request);
 
   return $auth->isValid();
@@ -112,7 +146,7 @@ function restapi_access_callback(ResourceConfiguration $resource, Request $reque
  * Delivery callback for API responses.
  *
  * @param mixed $response
- *   Generally, a Response object, or an integer provided by the Drupal menu
+ *   Generally, a JsonResponse object, or an integer provided by the Drupal menu
  *   system.
  *
  */
@@ -120,7 +154,7 @@ function restapi_delivery_callback($response) {
 
   $request = restapi_get_request();
 
-  // The menu system or page callbacks may return one of these integers.
+  // The menu system may return one of these integers.
   if (is_int($response)) {
     switch ($response) {
       case MENU_NOT_FOUND:
@@ -145,22 +179,6 @@ function restapi_delivery_callback($response) {
         $message = t('This resource is temporarily offline.');
         break;
 
-      // The request was authenticated, but subsequently failed an access check
-      // on the specific resource. This is assumed to be an authorization check.
-      case RESTAPI_ACCESS_DENIED:
-        $error   = 'unauthorized';
-        $status  = 403;
-        $message = t('You do not have permission to access this resource.');
-        break;
-
-      case RESTAPI_METHOD_NOT_ALLOWED:
-        $error   = 'not_allowed';
-        $status  = 405;
-        $message = t("This resource can not be accessed via @method", [
-          '@method' => $request->getMethod(),
-        ]);
-        break;
-
       default:
         $error   = 'unknown';
         $status  = 500;
@@ -174,9 +192,9 @@ function restapi_delivery_callback($response) {
     ], $status);
 
   }
-  elseif (!($response instanceof Response)) {
+  elseif (!($response instanceof JsonResponse)) {
     watchdog('restapi', '@id: The callback for the path "@path" returned an incorrect response. Expecting an instance of Response, or a Drupal constant (MENU_NOT_FOUND, MENU_ACCESS_DENIED, MENU_SITE_OFFLINE). Received response of type "@type"', [
-      '@id'   => restapi_get_request()->getRequestId(),
+      '@id'   => $request->getRequestId(),
       '@path' => current_path(),
       '@type' => gettype($response),
     ], WATCHDOG_ERROR);
@@ -187,15 +205,46 @@ function restapi_delivery_callback($response) {
     ], 503);
   }
 
+  $response->headers->set('X-Request-Id', $request->getRequestId());
+
   // For requests in the browser, we'll try to show the output in a more
   // pleasant way.
   if (!$request->isJson() && in_array('text/html', $request->getAcceptableContentTypes())) {
-    $json_options = $response->getEncodingOptions();
-    $response->setEncodingOptions($json_options | JSON_PRETTY_PRINT);
+    return restapi_deliver_html($response);
+  }
+  else {
+    $response->send();
   }
 
-  $response->headers->set('X-Request-Id', restapi_get_request()->getRequestId());
+  module_invoke_all('exit');
+
+}
+
+
+/**
+ * Delivers the JSON in a HTML wrapper, for easier browser viewing and
+ * debugging.
+ *
+ * @param JsonResponse $response
+ *
+ */
+function restapi_deliver_html(JsonResponse $response) {
+
+  $options = $response->getEncodingOptions();
+  $response->setEncodingOptions($options | JSON_PRETTY_PRINT);
+  $response->headers->set('Content-Type', 'text/html');
+
+  $headers = $response->headers->getIterator();
+
+  foreach($headers as $header => $values) {
+    $value  = implode('; ', $values);
+    $header = ucfirst($header);
+    print "<strong>$header</strong>: $value<br />\n";
+  }
+
+  print "<pre>";
   $response->send();
+  print "</pre>";
 
   module_invoke_all('exit');
 
@@ -282,7 +331,7 @@ function restapi_get_resources($refresh = FALSE) {
       try {
         $items[] = new ResourceConfiguration($path, $module, $class, $auth, $url_prefix);
       }
-      catch (\Drupal\restapi\Exception\ClassNotValidException $e) {
+      catch (ClassNotValidException $e) {
         watchdog('restapi', 'The resource "@resource" in the module "@module" is not valid because the class "@class" does not exist.', [
           '@class'    => $class,
           '@resource' => $path,
@@ -290,7 +339,7 @@ function restapi_get_resources($refresh = FALSE) {
         ], WATCHDOG_WARNING);
         continue;
       }
-      catch (\Drupal\restapi\Exception\AuthClassNotValidException $e) {
+      catch (AuthClassNotValidException $e) {
         watchdog('restapi', 'The resource "@resource" in the module "@module" is not valid because the authentication class "@auth" does not exist.', [
           '@auth'     => $auth,
           '@resource' => $path,
@@ -309,65 +358,39 @@ function restapi_get_resources($refresh = FALSE) {
 
 
 /**
- * Makes an internal request to a resource.
+ * Helper function to makes an internal request to a resource.
  *
  * Internal requests skip the HTTP overhead of the resource, and bypass the
  * authentication check. The resource may still implement an access check which
  * will be respected.
  *
  * Note that the method and data provided will override the method or data set
- * in the optional Request object.
+ * in the optional request object.
  *
  * @param string $method
  *   The HTTP method to call for the resource. This overrides the method set in
- *   the optional Request object.
+ *   the optional request object.
  * @param string $path
  *   The path representing the resource to call.
  * @param array $data
  *   An array of data to provide the resource. This overrides any data set in
- *   the optional Request object.
+ *   the optional request object.
  * @param \StdClass $user
  *   (Optional) The Drupal user to call this resource as. Defaults to the
  *   current user.
- * @param Request $request
+ * @param JsonRequest $request
  *   (Optional) The request to use to set the context for the resource. Defaults
- *   to the current page request.
+ *   to the current request context.
  *
- * @return JsonResponse | FALSE
- *   The response object, or FALSE If the path is invalid.
+ * @return JsonResponse
  *
  */
-function restapi_execute_resource($method, $path, array $data = [], \StdClass $user = NULL, Request $request = NULL) {
+function restapi_execute_resource($method, $path, array $data = [], \StdClass $user = NULL, JsonRequest $request = NULL) {
 
-  $request  = $request ?: restapi_get_request();
-  $resource = restapi_get_resource($path);
-  $user     = $user ?: $GLOBALS['user'];
+  $request = $request ?: restapi_get_request();
+  $user    = $user ?: $GLOBALS['user'];
+  $api     = new Api($user, $request);
 
-  if (!$resource) {
-    watchdog('restapi', 'The path "@path" does not match any known resources.', [
-      '@path' => $path,
-    ], WATCHDOG_ERROR);
-    return FALSE;
-  }
-
-  require_once 'restapi.pages.inc';
-
-  // TODO deal with $data
-  $request->setMethod($method);
-
-  $args = $resource->getArgumentsForPath($path);
-  array_unshift($args, $resource, $user, $request);
-
-  $result = call_user_func_array('restapi_page_callback', $args);
-
-  if ($result == RESTAPI_METHOD_NOT_ALLOWED) {
-    watchdog('restapi', 'The method "@method" is not available for the resource "@path".', [
-      '@method' => $method,
-      '@path'   => $path,
-    ], WATCHDOG_ERROR);
-    return FALSE;
-  }
-
-  return $result;
+  return $api->call($method, $path, $data);
 
 }
