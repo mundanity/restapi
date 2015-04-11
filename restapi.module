@@ -80,10 +80,10 @@ function restapi_modules_disabled($modules) {
  * Implements hook_restapi_request().
  *
  */
-function restapi_restapi_request(ResourceConfiguration $resource, JsonRequest $request) {
+function restapi_restapi_request($path, ResourceConfiguration $resource, JsonRequest $request) {
 
   if (variable_get('restapi_debug')) {
-    timer_start('restapi-' . $resource->getPath());
+    timer_start('restapi-' . $path);
   }
 
 }
@@ -93,10 +93,10 @@ function restapi_restapi_request(ResourceConfiguration $resource, JsonRequest $r
  * Implements hook_restapi_response().
  *
  */
-function restapi_restapi_response(ResourceConfiguration $resource, JsonRequest $request, JsonResponse $response) {
+function restapi_restapi_response($path, ResourceConfiguration $resource, JsonRequest $request, JsonResponse $response) {
 
   if (variable_get('restapi_debug')) {
-    $timer = timer_stop('restapi-' . $resource->getPath());
+    $timer = timer_stop('restapi-' . $path);
     $response->headers->set('X-Debug-Call-Time', $timer['time'] . 'ms');
   }
 
@@ -212,9 +212,8 @@ function restapi_delivery_callback($response) {
   if (!$request->isJson() && in_array('text/html', $request->getAcceptableContentTypes())) {
     return restapi_deliver_html($response);
   }
-  else {
-    $response->send();
-  }
+
+  $response->send();
 
   module_invoke_all('exit');
 

@@ -1,5 +1,10 @@
 <?php
 
+use Drupal\restapi\ResourceConfiguration;
+use Drupal\restapi\JsonRequest;
+use Drupal\restapi\JsonResponse;
+
+
 /**
  * Defines resources that will be made available to Drupal.
  *
@@ -35,15 +40,15 @@ function hook_restapi_resources() {
 /**
  * Allows modification of the request before the resource responds to it.
  *
- * @param Drupal\restapi\ResourceConfiguration $resource
+ * @param string $path
+ *   The path of the resource being accessed.
+ * @param ResourceConfiguration $resource
  *   A ResourceConfiguration object.
- * @param Drupal\restapi\JsonRequest $request
+ * @param JsonRequest $request
  *   The request object.
  *
  */
-function hook_restapi_request(
-  Drupal\restapi\ResourceConfiguration $resource,
-  Drupal\restapi\JsonRequest $request) {
+function hook_restapi_request($path, ResourceConfiguration $resource, JsonRequest $request) {
 
 
 }
@@ -55,18 +60,17 @@ function hook_restapi_request(
  * Note that the Request object is cloned, and as such, modifications to it will
  * not persist through the function call.
  *
- * @param Drupal\restapi\ResourceConfiguration $resource
+ * @param string $path
+ *   The path of the resource being accessed.
+ * @param ResourceConfiguration $resource
  *   A ResourceConfiguration object.
- * @param Drupal\restapi\JsonRequest $request
+ * @param JsonRequest $request
  *   A read only copy of the request object.
- * @param Drupal\restapi\JsonResponse $response
+ * @param JsonResponse $response
  *   The response object.
  *
  */
-function hook_restapi_response(
-  Drupal\restapi\ResourceConfiguration $resource,
-  Drupal\restapi\JsonRequest $request,
-  Drupal\restapi\JsonResponse $response) {
+function hook_restapi_response($path, ResourceConfiguration $resource, JsonRequest $request, JsonResponse $response) {
 
 
 }
