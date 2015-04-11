@@ -126,7 +126,7 @@ class Api {
     $request->setMethod($method);
     $request->setData($data);
 
-    module_invoke_all('restapi_request', $resource, $request);
+    module_invoke_all('restapi_request', $path, $resource, $request);
 
     $obj = $resource->invokeResource($this->getUser(), $request);
 
@@ -151,7 +151,7 @@ class Api {
       $response = $this->toError($e->getMessage());
     }
 
-    module_invoke_all('restapi_response', $resource, clone $request, $response);
+    module_invoke_all('restapi_response', $path, $resource, clone $request, $response);
 
     return $response;
 
