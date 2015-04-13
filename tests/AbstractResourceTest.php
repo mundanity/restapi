@@ -32,7 +32,21 @@ class AbstractResourceTest extends PHPUnit_Framework_TestCase {
     $resource = $this->getMockForAbstractClass('Drupal\restapi\AbstractResource', $args);
     $response = $resource->toJson('testdata');
 
-    $this->assertInstanceOf('Symfony\Component\HttpFoundation\Response', $response);
+    $this->assertInstanceOf('Drupal\restapi\JsonResponse', $response);
+
+  }
+
+
+  public function testToErrorReturnsResponse() {
+
+    $request = Request::createFromGlobals();
+    $user    = (object) ['uid' => 1];
+    $args    = [$user, $request];
+
+    $resource = $this->getMockForAbstractClass('Drupal\restapi\AbstractResource', $args);
+    $response = $resource->toError('testdata');
+
+    $this->assertInstanceOf('Drupal\restapi\JsonResponse', $response);
 
   }
 

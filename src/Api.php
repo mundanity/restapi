@@ -205,7 +205,7 @@ class Api {
    * @return JsonResponse
    *
    */
-  public function toError($message, $code = 'system', $status = 500) {
+  protected function toError($message, $code = 'system', $status = 500) {
     $data = [
       'error'   => $code,
       'message' => $message,
