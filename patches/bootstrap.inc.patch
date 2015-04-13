@@ -1,0 +1,14 @@
+diff --git a/includes/bootstrap.inc b/includes/bootstrap.inc
+index 9f37dfc..13ab11a 100644
+--- a/includes/bootstrap.inc
++++ b/includes/bootstrap.inc
+@@ -1747,6 +1747,9 @@ function watchdog($type, $message, $variables = array(), $severity = WATCHDOG_NO
+       'timestamp'   => time(),
+     );
+ 
++    // Allow modules to modify the log entry if needed.
++    drupal_alter('watchdog', $log_entry);
++
+     // Call the logging hooks to log/process the message
+     foreach (module_implements('watchdog') as $module) {
+       module_invoke($module, 'watchdog', $log_entry);

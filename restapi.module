@@ -137,6 +137,22 @@ function restapi_theme_registry_alter(&$theme) {
 
 
 /**
+ * Implements hook_watchdog_alter().
+ *
+ * WARNING: This hook is only run if Drupal core has been patched too allow for
+ * modules to alter the watchdog call before it is processed. If the patch is
+ * not applied, this function will never be called.
+ *
+ * @see patches/bootstrap.inc.patch
+ *
+ */
+function restapi_watchdog_alter(&$log_entry) {
+  $request_id = restapi_get_request()->getRequestId();
+  $log_entry['message'] = "Request ID: $request_id: " . $log_entry['message'];
+}
+
+
+/**
  * Page callback to handle an API call from the Drupal menu system.
  *
  * @return JsonResponse
