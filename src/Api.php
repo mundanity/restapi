@@ -181,10 +181,10 @@ class Api {
       $path   = isset($item['path']) ? $item['path'] : NULL;
       $data   = isset($item['data']) ? $item['data'] : [];
 
-      $response[$path] = $this->call($method, $path, $data);
+      $response[$path] = $this->call($method, $path, $data)->getData();
     }
 
-    return $response;
+    return JsonResponse::create($response);
 
   }
 

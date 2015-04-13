@@ -406,7 +406,7 @@ function restapi_get_resources($refresh = FALSE) {
 
 
 /**
- * Helper function to makes an internal request to a resource.
+ * Helper function to make an internal request to a resource.
  *
  * Internal requests skip the HTTP overhead of the resource, and bypass the
  * authentication check. The resource may still implement an access check which
