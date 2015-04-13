@@ -10,7 +10,7 @@ function restapi_drush_command() {
     'description' => dt('Returns a list of available resources (endpoints).'),
   ];
   $items['restapi-rebuild'] = [
-    'description' => dt('Rebuild the resource cache, reporting any errors found within resource definitions.'),
+    'description' => dt('Rebuild the resource cache, reporting any errors found within resource definitions. This will also rebuild the menu.'),
   ];
 
   return $items;
@@ -56,6 +56,7 @@ function drush_restapi_list() {
 function drush_restapi_rebuild() {
 
   $resources = restapi_get_resources(TRUE);
+  menu_rebuild();
 
   drush_log(dt('!count resources have been rebuilt and cached.', [
     '!count' => count($resources),

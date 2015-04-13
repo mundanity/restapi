@@ -32,13 +32,18 @@ function restapi_admin_form($form, &$form_state) {
     '#default_value' => variable_get('restapi_debug', FALSE),
   ];
 
-  return system_settings_form($form);
+  // We want to include our custom submission handler as well, to execute after
+  // variables are saved via system_settings_form_submit().
+  $form = system_settings_form($form);
+  $form['#submit'][] = __FUNCTION__ . '_submit';
+
+  return $form;
 
 }
 
 
 /**
- * Validation form for administrative settings.
+ * Validation handler for restapi administrative settings.
  *
  */
 function restapi_admin_form_validate($form, &$form_state) {
@@ -52,11 +57,27 @@ function restapi_admin_form_validate($form, &$form_state) {
     ]));
   }
 
-  if ($prefix) {
+  if ($prefix != variable_get('restapi_url_prefix')) {
+    $form_state['storage']['restapi_url_prefix_changed'] = TRUE;
+
     $prefix = trim($prefix);
     $prefix = rtrim($prefix, '/');
     $prefix = ltrim($prefix, '/');
     $form_state['values']['restapi_url_prefix'] = $prefix;
+  }
+
+}
+
+
+/**
+ * Submission handler for restapi administrative settings.
+ *
+ */
+function restapi_admin_form_submit($form, &$form_state) {
+
+  // Ensure the menu system picks up the changes due to the prefix update.
+  if (!empty($form_state['storage']['restapi_url_prefix_changed'])) {
+    menu_rebuild();
   }
 
 }
