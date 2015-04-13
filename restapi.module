@@ -104,6 +104,39 @@ function restapi_restapi_response($path, ResourceConfiguration $resource, JsonRe
 
 
 /**
+ * Implements hook_theme_registry_alter().
+ *
+ * The maintenance page ends up being the output for the default error handler.
+ * If we're in an AJAX context then we'll override that to ensure we're
+ * returning JSON.
+ *
+ * Note that this hook will only be fired when the theme is actually called.
+ * During an "expected" error as a result of the Drupal\restapi\Api class, this
+ * will never be run.
+ *
+ */
+function restapi_theme_registry_alter(&$theme) {
+
+  $request = restapi_get_request();
+
+  if ($request->isJson()) {
+    $file = 'restapi.theme.inc';
+    $path = drupal_get_path('module', 'restapi');
+
+    $theme['maintenance_page']['function'] = 'theme_restapi_error';
+    $theme['maintenance_page']['type'] = 'module';
+    $theme['maintenance_page']['theme path'] = $path;
+    $theme['maintenance_page']['file'] = $file;
+    $theme['maintenance_page']['includes'] = [$path . '/' . $file];
+
+    unset($theme['maintenance_page']['path']);
+    unset($theme['maintenance_page']['template']);
+  }
+
+}
+
+
+/**
  * Page callback to handle an API call from the Drupal menu system.
  *
  * @return JsonResponse
