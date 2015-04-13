@@ -7,8 +7,6 @@
  */
 function restapi_admin_form($form, &$form_state) {
 
-  // TODO: clear menu cache after url_prefix changes. #submit doesn't seem to
-  // work here :[
   $form['restapi_url_prefix'] = [
     '#type'          => 'textfield',
     '#title'         => t('URL prefix'),
