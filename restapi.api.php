@@ -50,6 +50,13 @@ function hook_restapi_resources() {
  */
 function hook_restapi_request($path, ResourceConfiguration $resource, JsonRequest $request) {
 
+  // Logs statsd data on our endpoints. Note that the $path represents the
+  // actual path being called, while the ResourceConfiguration::getPath() is the
+  // configured path (which may contain wildcards). The latter may also differ
+  // from the former in cases where internal calls are made.
+  if (module_exists('statsd')) {
+    statsd_call('restapi.' . $resource->getPath());
+  }
 
 }
 
@@ -72,5 +79,7 @@ function hook_restapi_request($path, ResourceConfiguration $resource, JsonReques
  */
 function hook_restapi_response($path, ResourceConfiguration $resource, JsonRequest $request, JsonResponse $response) {
 
+  // Set a friendly message in outgoing headers.
+  $response->headers->set('X-Daily-Message', t('Have a great day!'));
 
 }
