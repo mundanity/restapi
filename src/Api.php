@@ -110,7 +110,11 @@ class Api {
 
     $resource = restapi_get_resource($path);
     $method   = strtolower($method);
-    $request  = $this->getRequest();
+
+    // We intentionally clone the request for this call to ensure that any
+    // modifications due to a different $method or additional $data does not
+    // affect the state of the global request.
+    $request = clone $this->getRequest();
 
     if (!$resource) {
       $message = sprintf('The path "%s" does not match any known resources.', $path);
