@@ -46,4 +46,10 @@ class ApiTest extends PHPUnit_Framework_TestCase {
 
   }
 
+
+  public function testToErrorReturnsResponse() {
+    $response = $this->api->toError('testdata');
+    $this->assertInstanceOf('Drupal\restapi\JsonResponse', $response);
+  }
+
 }
