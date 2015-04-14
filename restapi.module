@@ -370,6 +370,13 @@ function restapi_get_resources($refresh = FALSE) {
 
     $resources = module_invoke($module, 'restapi_resources');
 
+    if (!is_array($resources)) {
+      watchdog('restapi', 'hook_restapi_resources(), implemented in "@module", does not return an array.', [
+        '@module' => $module,
+      ], WATCHDOG_WARNING);
+      continue;
+    }
+
     foreach($resources as $path => $resource) {
       $class = isset($resource['class']) ? $resource['class'] : 'ClassNotDefined';
       $auth  = isset($resource['auth']) ? $resource['auth'] : $default_auth;
