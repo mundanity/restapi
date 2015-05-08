@@ -100,13 +100,15 @@ class Api {
    * @param string $path
    *   The path to the resource.
    * @param array $data
-   *   An array of data to provide the resource. Any data provided will override
-   *   the values in the current Request object.
+   *   (optional) An array of data to provide to the resource. Any data provided
+   *   will override the values in the current Request object.
+   * @param array $headers
+   *   (optional) An array of headers to provide to the resource.
    *
    * @return JsonResponse
    *
    */
-  public function call($method, $path, array $data = []) {
+  public function call($method, $path, array $data = [], $headers = []) {
 
     $resource = restapi_get_resource($path);
     $method   = strtolower($method);
@@ -127,6 +129,11 @@ class Api {
     $request = clone $this->getRequest();
     $request->setMethod($method);
     $request->setData($data);
+
+    // Set headers on the new request object.
+    foreach ($headers as $key => $value) {
+      $request->headers->set($key, $value);
+    }
 
     module_invoke_all('restapi_request', $path, $resource, $request);
 
@@ -158,38 +165,6 @@ class Api {
     return $response;
 
   }
-
-
-  /**
-   * Executes multiple requests.
-   *
-   * @param array $data
-   *   An associative array of calls to make. Each call should have the
-   *   following keys:
-   *   - method: The HTTP method to call.
-   *   - path: The path for the resource.
-   *   - data: An array of data to use for this call.
-   *
-   * @return JsonResponse[]
-   *   An array of JsonResponse objects, keyed by the request path.
-   *
-   */
-  public function callMultiple(array $data = []) {
-
-    $response = [];
-
-    foreach($data as $item) {
-      $method = isset($item['method']) ? $item['method'] : NULL;
-      $path   = isset($item['path']) ? $item['path'] : NULL;
-      $data   = isset($item['data']) ? $item['data'] : [];
-
-      $response[$path] = $this->call($method, $path, $data)->getData();
-    }
-
-    return JsonResponse::create($response);
-
-  }
-
 
   /**
    * Helper method to return a JSON error response.
