@@ -8,6 +8,7 @@ Major
 ? add debug info when debug flag is set
 ? provide more info when called in a browser context.
 
+- figure out versioning
 - add timing info on how hooks are handled?
 
 Minor
