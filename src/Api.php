@@ -135,11 +135,11 @@ class Api {
       $request->headers->set($key, $value);
     }
 
-    module_invoke_all('restapi_request', $path, $resource, $request);
-
-    $obj = $resource->invokeResource($this->getUser(), $request);
-
     try {
+
+      module_invoke_all('restapi_request', $path, $resource, $request);
+
+      $obj = $resource->invokeResource($this->getUser(), $request);
       $obj->access($method);
       $obj->before();
 
@@ -152,6 +152,9 @@ class Api {
       }
 
       $obj->after($response);
+
+      module_invoke_all('restapi_response', $path, $resource, clone $request, $response);
+
     }
     catch (RestApiException $e) {
       $response = $this->toError($e->getMessage(), (string) $e, $e->getCode());
@@ -159,8 +162,6 @@ class Api {
     catch (Exception $e) {
       $response = $this->toError($e->getMessage());
     }
-
-    module_invoke_all('restapi_response', $path, $resource, clone $request, $response);
 
     return $response;
 

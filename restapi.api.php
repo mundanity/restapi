@@ -38,7 +38,9 @@ function hook_restapi_resources() {
 
 
 /**
- * Allows modification of the request before the resource responds to it.
+ * Allows modification of the request before the resource responds to it. An
+ * exception may be thrown in this hook to stop further processing of the
+ * request.
  *
  * @param string $path
  *   The path of the resource being accessed.
@@ -62,7 +64,9 @@ function hook_restapi_request($path, ResourceConfiguration $resource, JsonReques
 
 
 /**
- * Allows modification of the response before it is delivered to the client.
+ * Allows modification of the response before it is delivered to the client. An
+ * exception may be thrown in this hook to stop further processing of the
+ * request.
  *
  * Note that the Request object is cloned, and as such, modifications to it will
  * not persist through the function call.
