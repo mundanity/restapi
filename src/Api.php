@@ -98,7 +98,8 @@ class Api {
    *   The HTTP method to call. This will override the method in the current
    *   Request object.
    * @param string $path
-   *   The path to the resource.
+   *   The path to the resource. This will override the path in the current
+   *   Request object.
    * @param array $data
    *   (optional) An array of data to provide to the resource. Any data provided
    *   will override the values in the current Request object.
@@ -129,6 +130,9 @@ class Api {
     $request = clone $this->getRequest();
     $request->setMethod($method);
     $request->setData($data);
+
+    // Sets the new path, if it is different.
+    $request->server->set('REQUEST_URI', '/' . $path);
 
     // Set headers on the new request object.
     foreach ($headers as $key => $value) {
