@@ -2,7 +2,7 @@
 
 namespace Drupal\restapi\Auth;
 
-use Symfony\Component\HttpFoundation\Request;
+use Psr\Http\Message\RequestInterface;
 
 
 /**
@@ -16,11 +16,11 @@ interface AuthenticationServiceInterface {
    *
    * @param \StdClass $user
    *   A Drupal user object.
-   * @param Request $request
-   *   A Symfony HTTP Request object.
+   * @param RequestInterface $request
+   *   A HTTP Request object.
    *
    */
-  public function __construct(\StdClass $user, Request $request);
+  public function __construct(\StdClass $user, RequestInterface $request);
 
 
   /**

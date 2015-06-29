@@ -5,7 +5,7 @@ namespace Drupal\restapi;
 use Drupal\restapi\Exception\ClassNotValidException;
 use Drupal\restapi\Exception\AuthClassNotValidException;
 use Drupal\restapi\Auth\AuthenticationServiceInterface;
-use Symfony\Component\HttpFoundation\Request;
+use Psr\Http\Message\RequestInterface;
 
 
 /**
@@ -107,13 +107,13 @@ class ResourceConfiguration {
    *
    * @param \StdClass $user
    *   A Drupal user object to access the resource as.
-   * @param Request $request
-   *   A Symfony request to set context for the resource.
+   * @param RequestInterface $request
+   *   A HTTP request to set context for the resource.
    *
    * @return ResourceInterface
    *
    */
-  public function invokeResource(\StdClass $user, Request $request) {
+  public function invokeResource(\StdClass $user, RequestInterface $request) {
     $class = $this->getClass();
     return new $class($user, $request);
   }
@@ -124,13 +124,13 @@ class ResourceConfiguration {
    *
    * @param \StdClass $user
    *   A Drupal user object to access the resource as.
-   * @param Request $request
-   *   A Symfony request to set context for the authentication.
+   * @param RequestInterface $request
+   *   A HTTP request to set context for the authentication.
    *
    * @return AuthenticationServiceInterface
    *
    */
-  public function invokeAuthenticationService(\StdClass $user, Request $request) {
+  public function invokeAuthenticationService(\StdClass $user, RequestInterface $request) {
     $class = $this->getAuthenticationClass();
     return new $class($user, $request);
   }

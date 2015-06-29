@@ -42,12 +42,20 @@ function hook_restapi_resources() {
  * exception may be thrown in this hook to stop further processing of the
  * request.
  *
+ * In order to affect a change to the request object, it must be returned from
+ * this function.
+ *
  * @param string $path
  *   The path of the resource being accessed.
  * @param ResourceConfiguration $resource
  *   A ResourceConfiguration object.
  * @param JsonRequest $request
  *   The request object.
+ *
+ * @return mixed
+ *   If changes to the request need to be propagated, a modified request must be
+ *   returned. If nothing is returned, changes to the request will not available
+ *   downstream.
  *
  */
 function hook_restapi_request($path, ResourceConfiguration $resource, JsonRequest $request) {
@@ -68,8 +76,8 @@ function hook_restapi_request($path, ResourceConfiguration $resource, JsonReques
  * exception may be thrown in this hook to stop further processing of the
  * request.
  *
- * Note that the Request object is cloned, and as such, modifications to it will
- * not persist through the function call.
+ * Note that the request object is immutable, and changes to it will not be
+ * persisted.
  *
  * @param string $path
  *   The path of the resource being accessed.
@@ -80,10 +88,14 @@ function hook_restapi_request($path, ResourceConfiguration $resource, JsonReques
  * @param JsonResponse $response
  *   The response object.
  *
+ * @return mixed
+ *   If changes to the response need to be propagated, a modified request must
+ *   be returned. If nothing is returned, changes to the response will not be
+ *   available downstream.
+ *
  */
 function hook_restapi_response($path, ResourceConfiguration $resource, JsonRequest $request, JsonResponse $response) {
 
   // Set a friendly message in outgoing headers.
-  $response->headers->set('X-Daily-Message', t('Have a great day!'));
-
+  return $response->withHeader('X-Daily-Message', t('Have a great day!'));
 }

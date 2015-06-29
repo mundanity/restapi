@@ -2,7 +2,7 @@
 
 namespace Drupal\restapi;
 
-use Symfony\Component\HttpFoundation\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Exception;
 
 
@@ -11,7 +11,7 @@ use Exception;
  *
  * Implementing classes should add one or more methods that correspond to the
  * HTTP method desired. (e.g. MyResource::get() to response to a GET request).
- * These methods must return a Symfony Response object.
+ * These methods must return a HTTP Request object.
  *
  *
  *
@@ -23,11 +23,11 @@ interface ResourceInterface {
    *
    * @param \StdClass $user
    *   A Drupal user object.
-   * @param Request $request
-   *   A Symfony HTTP Request object.
+   * @param ServerRequestInterface $request
+   *   A HTTP request.
    *
    */
-  public function __construct(\StdClass $user, Request $request);
+  public function __construct(\StdClass $user, ServerRequestInterface $request);
 
 
   /**

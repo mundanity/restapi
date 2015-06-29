@@ -40,8 +40,13 @@ class Api {
    *
    */
   public function __construct(\StdClass $user = NULL, JsonRequest $request = NULL) {
-    $this->user    = $user ?: $GLOBALS['user'];
-    $this->request = $request ?: JsonRequest::createFromGlobals();
+
+    if (!$request) {
+      $request = ServerRequestFactory::fromGlobals();
+    }
+
+    $this->request = $request;
+    $this->user = $user ?: $GLOBALS['user'];
   }
 
 
@@ -124,24 +129,33 @@ class Api {
       return $this->toError($message, 'not_allowed', 405);
     }
 
-    // We intentionally clone the request for this call to ensure that any
-    // modifications due to a different $method or additional $data does not
-    // affect the state of the global request.
-    $request = clone $this->getRequest();
-    $request->setMethod($method);
-    $request->setData($data);
+    $request = $this->getRequest()
+      ->withMethod($method)
+      ->withData($data);
 
     // Sets the new path, if it is different.
-    $request->server->set('REQUEST_URI', '/' . $path);
+    $uri = $request->getUri();
+
+    if ($path != $uri->getPath()) {
+      $uri = $uri->withPath($path);
+      $request = $request->withUri($uri);
+    }
 
     // Set headers on the new request object.
     foreach ($headers as $key => $value) {
-      $request->headers->set($key, $value);
+      $request = $request->withHeader($key, $value);
     }
 
     try {
 
-      module_invoke_all('restapi_request', $path, $resource, $request);
+      foreach(module_implements('restapi_request') as $module) {
+        $func   = $module . '_restapi_request';
+        $result = $func($path, $resource, $request);
+
+        if ($result instanceof JsonRequest) {
+          $request = $result;
+        }
+      }
 
       $obj = $resource->invokeResource($this->getUser(), $request);
       $obj->access($method);
@@ -151,14 +165,20 @@ class Api {
       $response = call_user_func_array([$obj, $method], $args);
 
       if (!$response instanceof JsonResponse) {
-        $message = sprintf('%s::%s() must return an instance of Response.', $resource->getClass(), $method);
+        $message = sprintf('%s::%s() must return an instance of JsonResponse.', $resource->getClass(), $method);
         throw new Exception($message);
       }
 
       $obj->after($response);
 
-      module_invoke_all('restapi_response', $path, $resource, clone $request, $response);
+      foreach(module_implements('restapi_response') as $module) {
+        $func = $module . '_restapi_response';
+        $result = $func($path, $resource, $request, $response);
 
+        if ($result instanceof JsonResponse) {
+          $response = $result;
+        }
+      }
     }
     catch (RestApiException $e) {
       $response = $this->toError($e->getMessage(), (string) $e, $e->getCode());

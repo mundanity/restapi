@@ -1,7 +1,6 @@
 Major
 =====
 
-- switch to PSR-7
 - finish tests for Api
 
 - do we need a plugin framework? or are the hooks good enough?

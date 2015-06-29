@@ -10,17 +10,11 @@ class ApiTest extends PHPUnit_Framework_TestCase {
 
     $this->request = $this->getMock('Drupal\restapi\JsonRequest');
     $this->user = (object) [
-      'uid'  => 1,
+      'uid' => 1,
       'name' => 'user',
     ];
 
     $this->api = new Api($this->user, $this->request);
-
-  }
-
-
-  public function testConstructor() {
-    $this->assertInstanceOf('Drupal\restapi\Api', $this->api);
   }
 
 

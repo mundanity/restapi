@@ -15,15 +15,6 @@ class ResourceConfigurationTest extends PHPUnit_Framework_TestCase {
   }
 
 
-  public function testConstructor() {
-
-    $config = new ResourceConfiguration('path/to/resource', 'my_module', $this->class, $this->auth);
-
-    $this->assertInstanceOf('Drupal\restapi\ResourceConfiguration', $config);
-
-  }
-
-
   public function testConstructorThrowsExceptionWhenClassDoesNotExist() {
     $this->setExpectedException('Drupal\restapi\Exception\ClassNotValidException');
     $config = new ResourceConfiguration('path/to/resource', 'my_module', 'ClassDoesNotExist', $this->auth);

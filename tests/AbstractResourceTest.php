@@ -1,6 +1,6 @@
 <?php
 
-use Symfony\Component\HttpFoundation\Request;
+use Drupal\restapi\ServerRequestFactory;
 
 
 /**
@@ -10,22 +10,9 @@ use Symfony\Component\HttpFoundation\Request;
 class AbstractResourceTest extends PHPUnit_Framework_TestCase {
 
 
-  public function testConstructor() {
-
-    $request = Request::createFromGlobals();
-    $user    = (object) ['uid' => 1];
-    $args    = [$user, $request];
-
-    $resource = $this->getMockForAbstractClass('Drupal\restapi\AbstractResource', $args);
-
-    $this->assertInstanceOf('Drupal\restapi\AbstractResource', $resource);
-
-  }
-
-
   public function testToJsonReturnsResponse() {
 
-    $request = Request::createFromGlobals();
+    $request = ServerRequestFactory::fromGlobals();
     $user    = (object) ['uid' => 1];
     $args    = [$user, $request];
 
@@ -39,7 +26,7 @@ class AbstractResourceTest extends PHPUnit_Framework_TestCase {
 
   public function testToErrorReturnsResponse() {
 
-    $request = Request::createFromGlobals();
+    $request = ServerRequestFactory::fromGlobals();
     $user    = (object) ['uid' => 1];
     $args    = [$user, $request];
 

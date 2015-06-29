@@ -2,15 +2,32 @@
 
 namespace Drupal\restapi;
 
-use Symfony\Component\HttpFoundation\JsonResponse as SymfonyJsonResponse;
+use Zend\Diactoros\Response\JsonResponse as ZendJsonResponse;
 
 
 /**
- * Provides additional functionality to the Symfony JsonResponse object. Namely,
- * allows for the retrieval of the data after it has been originally set.
+ * Provides additional functionality to the Guzzle PSR-7 Response object.
  *
  */
-class JsonResponse extends SymfonyJsonResponse {
+class JsonResponse extends ZendJsonResponse {
+
+  /**
+   * Factory method to create a response.
+   *
+   * @param mixed $data
+   *   A string or StreamInterface implementation.
+   * @param int $status
+   *   The HTTP status to use.
+   * @param array $headers
+   *   An array of headers.
+   *
+   * @return self
+   *
+   */
+  public static function create($data, $status = 200, array $headers = []) {
+    return new static($data, $status, $headers, JSON_PRETTY_PRINT);
+  }
+
 
   /**
    * Returns the data contained in the response object as an array.
@@ -19,7 +36,7 @@ class JsonResponse extends SymfonyJsonResponse {
    *
    */
   public function getData() {
-    return json_decode($this->data, TRUE);
+    return json_decode((string) $this->getBody(), TRUE);
   }
 
 }

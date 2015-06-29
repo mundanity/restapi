@@ -3,9 +3,11 @@
 use Drupal\restapi\Api;
 use Drupal\restapi\JsonRequest;
 use Drupal\restapi\JsonResponse;
+use Drupal\restapi\ServerRequestFactory;
 use Drupal\restapi\ResourceConfiguration;
 use Drupal\restapi\Exception\ClassNotValidException;
 use Drupal\restapi\Exception\AuthClassNotValidException;
+use Zend\Diactoros\Response\SapiEmitter;
 
 
 /**
@@ -97,7 +99,7 @@ function restapi_restapi_response($path, ResourceConfiguration $resource, JsonRe
 
   if (variable_get('restapi_debug')) {
     $timer = timer_stop('restapi-' . $path);
-    $response->headers->set('X-Debug-Call-Time', $timer['time'] . 'ms');
+    return $response->withHeader('X-Debug-Call-Time', $timer['time'] . 'ms');
   }
 
 }
@@ -254,15 +256,15 @@ function restapi_delivery_callback($response) {
     ], 503);
   }
 
-  $response->headers->set('X-Request-Id', $request->getRequestId());
+  $response = $response->withHeader('X-Request-Id', $request->getRequestId());
 
   // For requests in the browser, we'll try to show the output in a more
   // pleasant way.
-  if (!$request->isJson() && in_array('text/html', $request->getAcceptableContentTypes())) {
+  if (!$request->isJson() && strpos($request->getHeaderLine('Accept'), 'text/html') !== FALSE) {
     return restapi_deliver_html($response);
   }
 
-  $response->send();
+  (new SapiEmitter())->emit($response);
 
   module_invoke_all('exit');
 
@@ -278,11 +280,8 @@ function restapi_delivery_callback($response) {
  */
 function restapi_deliver_html(JsonResponse $response) {
 
-  $options = $response->getEncodingOptions();
-  $response->setEncodingOptions($options | JSON_PRETTY_PRINT);
-  $response->headers->set('Content-Type', 'text/html');
-
-  $headers = $response->headers->getIterator();
+  $response = $response->withHeader('Content-Type', 'text/html');
+  $headers = $response->getHeaders();
 
   foreach($headers as $header => $values) {
     $value  = implode('; ', $values);
@@ -291,7 +290,7 @@ function restapi_deliver_html(JsonResponse $response) {
   }
 
   print "<pre>";
-  $response->send();
+  (new SapiEmitter())->emit($response);
   print "</pre>";
 
   module_invoke_all('exit');
@@ -310,7 +309,7 @@ function restapi_get_request() {
   static $request = NULL;
 
   if (!$request) {
-    $request = JsonRequest::createFromGlobals();
+    $request = ServerRequestFactory::fromGlobals();
   }
 
   return $request;

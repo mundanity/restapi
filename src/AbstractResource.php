@@ -2,7 +2,7 @@
 
 namespace Drupal\restapi;
 
-use Symfony\Component\HttpFoundation\Request;
+use Psr\Http\Message\ServerRequestInterface;
 
 
 /**
@@ -14,7 +14,7 @@ abstract class AbstractResource implements ResourceInterface {
   /**
    * A HTTP Request object.
    *
-   * @var Request
+   * @var ServerRequestInterface
    */
   protected $request = NULL;
 
@@ -30,7 +30,7 @@ abstract class AbstractResource implements ResourceInterface {
    * {@inheritdoc}
    *
    */
-  public function __construct(\StdClass $user, Request $request) {
+  public function __construct(\StdClass $user, ServerRequestInterface $request) {
     $this->user = $user;
     $this->request = $request;
   }
@@ -62,7 +62,7 @@ abstract class AbstractResource implements ResourceInterface {
   /**
    * Returns the current request.
    *
-   * @return Request
+   * @return ServerRequestInterface
    *
    */
   public function getRequest() {

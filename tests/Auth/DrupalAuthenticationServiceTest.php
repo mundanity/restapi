@@ -9,14 +9,22 @@ use Drupal\restapi\Auth\DrupalAuthenticationService;
  */
 class AuthenticationServiceInterfaceTest extends PHPUnit_Framework_TestCase {
 
-  public function testConstructor() {
+  /**
+   * Ensures that isValid() executes as expected.
+   *
+   */
+  public function testIsValid() {
 
-    $user = (object) ['uid' => 5, 'name' => 'testuser'];
-    $request = $this->getMock('Symfony\Component\HttpFoundation\Request');
 
-    $auth = new DrupalAuthenticationService($user, $request);
-    $this->assertInstanceOf('Drupal\restapi\Auth\AuthenticationServiceInterface', $auth);
 
   }
 
+}
+
+
+function user_access($permission, $user) {
+  if (!empty($user->fail_access_check)) {
+    return FALSE;
+  }
+  return TRUE;
 }

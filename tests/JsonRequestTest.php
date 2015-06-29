@@ -1,269 +1,224 @@
 <?php
 
 use Drupal\restapi\JsonRequest;
+use Drupal\restapi\ServerRequestFactory;
 
 
+/**
+ * Tests for a JsonRequest class.
+ *
+ */
 class JsonRequestTest extends PHPUnit_Framework_TestCase {
 
-  public function setUp() {
-    $this->server = [
-      'HTTP_CONTENT_TYPE' => 'application/json',
-      'HTTP_ACCEPT'       => 'application/json; version=3',
-      'HTTP_X_REQUEST_ID' => 'client-set-id',
-    ];
-    $this->content = json_encode(['var' => 'set']);
+  /**
+   * Ensures that get() works as expected for GET requests.
+   *
+   */
+  public function testGetWithHttpGet() {
+
+    $server['REQUEST_METHOD'] = 'GET';
+
+    $request = ServerRequestFactory::fromGlobals($server, ['var' => 'set']);
+    $this->assertEquals('set', $request->get('var'));
   }
 
 
-  public function testInitializeIgnoresNonJsonContentType() {
+  /**
+   * Ensures that get() ignores a query param if using making a non-GET HTTP
+   * request.
+   *
+   */
+  public function testGetReturnsNullWithNonGetRequest() {
 
-    $server = [
-      'HTTP_CONTENT_TYPE' => 'text/html',
-    ];
+    $server['REQUEST_METHOD'] = 'POST';
 
-    $request = new JsonRequest();
-    $request->initialize(
-      [], // Query
-      [], // Request
-      [], // Attributes
-      [], // Cookies
-      [], // Files
-      $server, // Server
-      $this->content
-    );
-
+    $request = ServerRequestFactory::fromGlobals($server, ['var' => 'set']);
     $this->assertNull($request->get('var'));
-
   }
 
 
-  public function testInitializeSetsVariableForPut() {
+  /**
+   * Ensures that get() works as expected for PUT, POST, DELETE, and PATCH
+   * requests.
+   *
+   */
+  public function testPutPostDeleteAndPatchSetReturnsForGet() {
 
-    $this->server['REQUEST_METHOD'] = 'PUT';
+    $server['REQUEST_METHOD'] = 'POST';
 
-    $request = new JsonRequest();
-    $request->initialize(
-      [], // Query
-      [], // Request
-      [], // Attributes
-      [], // Cookies
-      [], // Files
-      $this->server, // Server
-      $this->content
-    );
-
+    $request = ServerRequestFactory::fromGlobals($server, null, ['var' => 'set']);
     $this->assertEquals('set', $request->get('var'));
 
-  }
+    $server['REQUEST_METHOD'] = 'PUT';
 
-
-  public function testInitializeSetsVariableForPost() {
-
-    $this->server['REQUEST_METHOD'] = 'POST';
-
-    $request = new JsonRequest();
-    $request->initialize(
-      [], // Query
-      [], // Request
-      [], // Attributes
-      [], // Cookies
-      [], // Files
-      $this->server, // Server
-      $this->content
-    );
-
+    $request = ServerRequestFactory::fromGlobals($server, null, ['var' => 'set']);
     $this->assertEquals('set', $request->get('var'));
 
-  }
+    $server['REQUEST_METHOD'] = 'PATCH';
 
-
-  public function testInitializeSetsVariableForPatch() {
-
-    $this->server['REQUEST_METHOD'] = 'PATCH';
-
-    $request = new JsonRequest();
-    $request->initialize(
-      [], // Query
-      [], // Request
-      [], // Attributes
-      [], // Cookies
-      [], // Files
-      $this->server, // Server
-      $this->content
-    );
-
+    $request = ServerRequestFactory::fromGlobals($server, null, ['var' => 'set']);
     $this->assertEquals('set', $request->get('var'));
 
-  }
+    $server['REQUEST_METHOD'] = 'DELETE';
 
-
-  public function testInitializeSetsVariableForDelete() {
-
-    $this->server['REQUEST_METHOD'] = 'DELETE';
-
-    $request = new JsonRequest();
-    $request->initialize(
-      [], // Query
-      [], // Request
-      [], // Attributes
-      [], // Cookies
-      [], // Files
-      $this->server, // Server
-      $this->content
-    );
-
+    $request = ServerRequestFactory::fromGlobals($server, null, ['var' => 'set']);
     $this->assertEquals('set', $request->get('var'));
-
   }
 
 
-  public function testInitializeOverridesRequestVariable() {
+  /**
+   * Ensures that get() ignores parsed body variables when handling GET
+   * requests.
+   *
+   */
+  public function testGetIgnoresParsedBodyWhenUnderHttpGet() {
 
-    $this->server['REQUEST_METHOD'] = 'POST';
-
-    $request = new JsonRequest();
-    $request->initialize(
-      [], // Query
-      ['var' => 'unexpected'], // Request
-      [], // Attributes
-      [], // Cookies
-      [], // Files
-      $this->server, // Server
-      $this->content
-    );
-
-    $this->assertEquals('set', $request->get('var'));
-
+    $request = ServerRequestFactory::fromGlobals(null, null, ['var' => 'set']);
+    $this->assertNull($request->get('var'));
   }
 
 
-  public function testGetVersion() {
-
-    $request = new JsonRequest();
-    $request->initialize(
-      [], // Query
-      [], // Request
-      [], // Attributes
-      [], // Cookies
-      [], // Files
-      $this->server, // Server
-      $this->content
-    );
-
-    $this->assertEquals(3, $request->getVersion());
-
-  }
-
-
-  public function testFirstVersionHeaderIsUsed() {
-
-    $this->server['HTTP_ACCEPT'] = 'application/json; version=2, text/html; version=3';
-
-    $request = new JsonRequest();
-    $request->initialize(
-      [], // Query
-      [], // Request
-      [], // Attributes
-      [], // Cookies
-      [], // Files
-      $this->server, // Server
-      $this->content
-    );
-
-    $this->assertEquals(2, $request->getVersion());
-
-  }
-
-
-  public function testGetVersionSetsDefaultTo1() {
-
-    $this->server['HTTP_ACCEPT'] = 'text/html';
-
-    $request = new JsonRequest();
-    $request->initialize(
-      [], // Query
-      [], // Request
-      [], // Attributes
-      [], // Cookies
-      [], // Files
-      $this->server, // Server
-      $this->content
-    );
-
-    $this->assertEquals(1, $request->getVersion());
-
-  }
-
-
-  public function testClientSetRequestId() {
-
-    $request = new JsonRequest();
-    $request->initialize(
-      [], // Query
-      [], // Request
-      [], // Attributes
-      [], // Cookies
-      [], // Files
-      $this->server, // Server
-      $this->content
-    );
-
-    $this->assertEquals('client-set-id', $request->getRequestId());
-
-  }
-
-
-  public function testRequestIdIsSameWhenCalledTwice() {
-
-    unset($this->server['HTTP_X_REQUEST_ID']);
-
-    $request = new JsonRequest();
-    $request->initialize(
-      [], // Query
-      [], // Request
-      [], // Attributes
-      [], // Cookies
-      [], // Files
-      $this->server, // Server
-      $this->content
-    );
-    $request_id = $request->getRequestId();
-
-    $this->assertEquals($request_id, $request->getRequestId());
-
-  }
-
-
-  public function testSetDataWorksAsAdvertised() {
-
-    $request = new JsonRequest();
-    $request->initialize(
-      ['foo' => 'fooget', 'bar' => 'barget'], // Query
-      ['foo' => 'foopost', 'bar' => 'barpost'], // Request
-      [], // Attributes
-      [], // Cookies
-      [], // Files
-      $this->server, // Server
-      $this->content
-    );
+  /**
+   * Ensures that withData() works as expected with GET requests.
+   *
+   */
+  public function testWithDataWithGet() {
 
     $data = [
-      'new' => 'value',
-      'foo' => 'newfoo',
+      'test' => 'testing',
     ];
 
-    $request->setData($data);
+    $request = ServerRequestFactory::fromGlobals();
+    $request = $request->withData($data);
 
-    $this->assertEquals($request->query->get('new'), 'value');
-    $this->assertEquals($request->query->get('foo'), 'newfoo');
-
-    $request->setMethod('PATCH');
-
-    $request->setData($data);
-
-    $this->assertEquals($request->request->get('new'), 'value');
-    $this->assertEquals($request->request->get('foo'), 'newfoo');
-
+    $this->assertEquals($data, $request->getQueryParams());
+    $this->assertEquals([], $request->getParsedBody());
   }
 
+
+  /**
+   * Ensures that withData() works as expected with POST requests.
+   *
+   */
+  public function testWithDataWithPost() {
+
+    $data = [
+      'test' => 'testing',
+    ];
+
+    $request = ServerRequestFactory::fromGlobals(['REQUEST_METHOD' => 'POST']);
+    $request = $request->withData($data);
+
+    $this->assertEquals([], $request->getQueryParams());
+    $this->assertEquals($data, $request->getParsedBody());
+  }
+
+
+  /**
+   * Ensures that getVersion() works as expected.
+   *
+   */
+  public function testGetVersion() {
+
+    $server['HTTP_ACCEPT'] = 'application/json; version=3';
+
+    $request = ServerRequestFactory::fromGlobals($server);
+    $this->assertEquals(3, $request->getVersion());
+  }
+
+
+  /**
+   * Ensures that only the first version found is used.
+   *
+   */
+  public function testFirstVersionHeaderIsUsed() {
+
+    $server['HTTP_ACCEPT'] = 'application/json; version=2, application/json; version=3';
+
+    $request = ServerRequestFactory::fromGlobals($server);
+    $this->assertEquals(2, $request->getVersion());
+  }
+
+
+  /**
+   * Ensures that the default version is 1, if no suitable header is found.
+   *
+   */
+  public function testGetVersionSetsDefaultTo1() {
+
+    $server['HTTP_ACCEPT'] = 'text/html';
+
+    $request = ServerRequestFactory::fromGlobals($server);
+    $this->assertEquals(1, $request->getVersion());
+  }
+
+
+  /**
+   * Ensures that a version not associated with an application/json accept
+   * header is not used.
+   *
+   */
+  public function testGetVersionReturns1IfAcceptHeaderIsNotJson() {
+
+    $server['HTTP_ACCEPT'] = 'text/html; version=2';
+
+    $request = ServerRequestFactory::fromGlobals($server);
+    $this->assertEquals(1, $request->getVersion());
+  }
+
+
+  /**
+   * Ensures that isJson() works as expected.
+   *
+   */
+  public function testIsJson() {
+
+    $server['HTTP_CONTENT_TYPE'] = 'application/json';
+
+    $request = ServerRequestFactory::fromGlobals($server);
+    $this->assertTrue($request->isJson());
+
+    // Test case insensitivity.
+    $server['HTTP_CONTENT_TYPE'] = 'APPLICATION/JSON';
+
+    $request = ServerRequestFactory::fromGlobals($server);
+    $this->assertTrue($request->isJson());
+  }
+
+
+  /**
+   * Ensures that getRequestId() works as expected.
+   *
+   */
+  public function testRequestId() {
+
+    $request = ServerRequestFactory::fromGlobals();
+    $this->assertInternalType('string', $request->getRequestId());
+  }
+
+
+  /**
+   * Ensures that getRequestId() returns the value of X-REQUEST-ID.
+   *
+   */
+  public function testRequestIdReturnsHeaderValue() {
+
+    $server['HTTP_X_REQUEST_ID'] = 'request-id';
+
+    $request = ServerRequestFactory::fromGlobals($server);
+    $this->assertEquals('request-id', $request->getRequestId());
+  }
+
+
+  /**
+   * Ensures that getRequestId() returns the same value when called twice.
+   *
+   */
+  public function testRequestIdReturnsSameValueWhenCalledMoreThanOnce() {
+
+    $request = ServerRequestFactory::fromGlobals();
+    $id = $request->getRequestId();
+
+    $this->assertEquals($id, $request->getRequestId());
+  }
 }

@@ -2,7 +2,7 @@
 
 namespace Drupal\restapi\Auth;
 
-use Symfony\Component\HttpFoundation\Request;
+use Psr\Http\Message\RequestInterface;
 
 
 /**
@@ -14,7 +14,7 @@ abstract class AbstractAuthenticationService implements AuthenticationServiceInt
   /**
    * A HTTP Request object.
    *
-   * @var Request
+   * @var RequestInterface
    */
   protected $request = NULL;
 
@@ -32,7 +32,7 @@ abstract class AbstractAuthenticationService implements AuthenticationServiceInt
    * {@inheritdoc}
    *
    */
-  public function __construct(\StdClass $user, Request $request) {
+  public function __construct(\StdClass $user, RequestInterface $request) {
     $this->user = $user;
     $this->request = $request;
   }
@@ -59,7 +59,7 @@ abstract class AbstractAuthenticationService implements AuthenticationServiceInt
   /**
    * Returns the current request.
    *
-   * @return Request
+   * @return RequestInterface
    *
    */
   protected function getRequest() {

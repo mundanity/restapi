@@ -2,8 +2,7 @@
 
 namespace Drupal\restapi;
 
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\AcceptHeader;
+use Zend\Diactoros\ServerRequest;
 
 
 /**
@@ -11,7 +10,7 @@ use Symfony\Component\HttpFoundation\AcceptHeader;
  * translates a json body into request variables.
  *
  */
-class JsonRequest extends Request {
+class JsonRequest extends ServerRequest {
 
   /**
    * Holds the request ID.
@@ -22,41 +21,38 @@ class JsonRequest extends Request {
 
 
   /**
-   * {@inheritdoc}
+   * Retrieves a parameter from the request, depending on the HTTP method.
+   *
+   * @param string $param
+   *   The parameter to return.
+   * @param mixed $default
+   *   The default to return, if the parameter does not exist.
+   *
+   * @return mixed
    *
    */
-  public function initialize(array $query = [], array $request = [], array $attributes = [], array $cookies = [], array $files = [], array $server = [], $content = null) {
-    parent::initialize($query, $request, $attributes, $cookies, $files, $server, $content);
-
-    $vars_in_body = in_array($this->getMethod(), ['PUT', 'POST', 'PATCH', 'DELETE']);
-
-    if (!$this->isJson() || !$vars_in_body) {
-      return;
-    }
-
-    if (!($data = json_decode($this->getContent(), TRUE))) {
-      return;
-    }
-
-    foreach($data as $key => $value) {
-      $this->request->set($key, $value);
-    }
+  public function get($param, $default = NULL) {
+    $items = (strtolower($this->getMethod()) == 'get') ? $this->getQueryParams() : $this->getParsedBody();
+    return isset($items[$param]) ? $items[$param] : $default;
   }
 
 
   /**
-   * Sets data on the request object. This will override any current data in the
-   * request.
+   * Sets data on the request object. This will set the appropriate data
+   * depending on the request method.
    *
    * @param array $data
    *
+   * @return self
    */
-  public function setData(array $data = []) {
-    $param_bag = strtolower($this->getMethod()) == 'get' ? 'query' : 'request';
+  public function withData(array $data = []) {
 
-    foreach($data as $key => $value) {
-      $this->{$param_bag}->set($key, $value);
-    }
+    $func = strtolower($this->getMethod()) == 'get' ? 'QueryParams' : 'ParsedBody';
+    $get_func  = 'get' . $func;
+    $with_func = 'with' . $func;
+    $data = array_merge($this->$get_func(), $data);
+
+    return $this->$with_func($data);
   }
 
 
@@ -70,14 +66,12 @@ class JsonRequest extends Request {
   public function getVersion() {
 
     $version = 1;
-    $accept  = AcceptHeader::fromString($this->headers->get('accept'));
 
     // We'll assume the first accept header to have a version is accurate.
-    foreach($accept->all() as $item) {
-      if ($item->getAttribute('version')) {
-        $version = $item->getAttribute('version');
-        break;
-      }
+    preg_match('/application\/json;\s+version=(\d+)/i', $this->getHeaderLine('accept'), $matches);
+
+    if (isset($matches[1])) {
+      $version = $matches[1];
     }
 
     return $version;
@@ -88,33 +82,44 @@ class JsonRequest extends Request {
   /**
    * Determines if this request is actually a Json request or not.
    *
-   * A Json request will have an accept header of "application/json".
+   * A Json request will have a Content-type header of "application/json".
+   * Although the HTTP spec does suggest that header values are case-sensitive
+   * (or rather, does not specify that they are case-insensitive), we'll accept
+   * differently cased strings here.
    *
    * @return boolean
    *
    */
   public function isJson() {
-    return (strpos($this->headers->get('content-type'), 'application/json') === 0);
+    return (stripos($this->getHeaderLine('content-type'), 'application/json') === 0);
   }
 
 
   /**
    * Returns the ID of this request.
    *
+   * @param callable $id_func
+   *   The callable to use to generate the request ID if the header X-REQUEST-ID
+   *   is not set. Defaults to PHP's inbuilt "uniqid".
+   *
    * @return string
    *
    */
-  public function getRequestId() {
+  public function getRequestId(callable $id_func = null) {
 
     if ($this->request_id !== NULL) {
       return $this->request_id;
     }
 
-    if (!($this->request_id = $this->headers->get('x-request-id'))) {
-      $this->request_id = uniqid('', TRUE);
+    $id_func = $id_func ?: 'uniqid';
+
+    if (!($this->request_id = $this->getHeaderLine('x-request-id'))) {
+      $this->request_id = call_user_func($id_func);
     }
 
-    return $this->request_id;
+    // Note that the type casting is explicit here, in case the callable returns
+    // an object that implements __toString().
+    return (string) $this->request_id;
 
   }
 
