@@ -30,7 +30,11 @@ class ServerRequestFactory extends AbstractServerRequestFactory {
     $server  = static::normalizeServer($server ?: $_SERVER);
     $files   = static::normalizeFiles($files ?: $_FILES);
     $headers = static::marshalHeaders($server);
-    $method  = strtoupper(static::get('REQUEST_METHOD', $server, 'GET'));
+
+    // static::get() has a default parameter, however, if the header is set but
+    // the value is NULL, e.g. during a drush operation, the NULL result is
+    // returned, instead of the default.
+    $method  = strtoupper(static::get('REQUEST_METHOD', $server) ?: 'GET');
 
     $request = new JsonRequest(
       $server,
@@ -53,5 +57,4 @@ class ServerRequestFactory extends AbstractServerRequestFactory {
       ->withQueryParams($query ?: $_GET)
       ->withParsedBody($body ?: $_POST);
   }
-
 }
