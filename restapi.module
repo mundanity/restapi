@@ -50,7 +50,7 @@ function restapi_menu() {
  */
 function restapi_xautoload($adapter) {
   if (module_exists('composer_manager')) {
-    $dir = composer_manager_vendor_dir() . '/vendor/composer';
+    $dir = composer_manager_vendor_dir() . '/composer';
     $adapter->absolute()->composerDir($dir);
   }
 
