@@ -3,6 +3,7 @@
 namespace Drupal\restapi;
 
 use Drupal\restapi\Exception\RestApiException;
+use Drupal\restapi\Exception\UnauthorizedException;
 use Exception;
 
 
@@ -114,7 +115,7 @@ class Api {
    * @return JsonResponse
    *
    */
-  public function call($method, $path, array $data = [], $headers = []) {
+  public function call($method, $path, array $data = [], array $headers = []) {
 
     $resource = restapi_get_resource($path);
     $method   = strtolower($method);
@@ -147,18 +148,10 @@ class Api {
     }
 
     try {
-
-      foreach(module_implements('restapi_request') as $module) {
-        $func   = $module . '_restapi_request';
-        $result = $func($path, $resource, $request);
-
-        if ($result instanceof JsonRequest) {
-          $request = $result;
-        }
-      }
+      $request = $this->invokeHookRequest($path, $resource, $request);
 
       $obj = $resource->invokeResource($this->getUser(), $request);
-      $obj->access($method);
+      $this->handleAccess($obj, $method);
       $obj->before();
 
       $args = $resource->getArgumentsForPath($path);
@@ -170,15 +163,6 @@ class Api {
       }
 
       $obj->after($response);
-
-      foreach(module_implements('restapi_response') as $module) {
-        $func = $module . '_restapi_response';
-        $result = $func($path, $resource, $request, $response);
-
-        if ($result instanceof JsonResponse) {
-          $response = $result;
-        }
-      }
     }
     catch (RestApiException $e) {
       $response = $this->toError($e->getMessage(), (string) $e, $e->getCode());
@@ -187,9 +171,10 @@ class Api {
       $response = $this->toError($e->getMessage());
     }
 
+    $response = $this->invokeHookResponse($path, $resource, $request, $response);
     return $response;
-
   }
+
 
   /**
    * Helper method to return a JSON error response.
@@ -211,6 +196,104 @@ class Api {
       'message' => $message,
     ];
     return JsonResponse::create($data, $status);
+  }
+
+
+  /**
+   * Handles access for the resource being called.
+   *
+   * @param ResourceInterface $resource
+   *   The resource being called.
+   * @param string $method
+   *   The HTTP method of the request.
+   *
+   * @throws RestApiException
+   * @throws UnauthorizedException
+   *
+   */
+  protected function handleAccess(ResourceInterface $resource, $method) {
+
+    $result = $resource->access();
+
+    if ($result === FALSE) {
+      throw new UnauthorizedException('Permission denied');
+    }
+
+    if ($result instanceof JsonResponse) {
+      throw new RestApiException((string) $result->getBody(), $result->getStatusCode());
+    }
+
+    $access = 'access' . ucfirst($method);
+
+    if (method_exists($resource, $access)) {
+      $result = $resource->$access();
+
+      if ($result === FALSE) {
+        throw new UnauthorizedException('Permission denied');
+      }
+
+      if ($result instanceof JsonResponse) {
+        throw new RestApiException((string) $result->getBody(), $result->getStatusCode());
+      }
+    }
+  }
+
+
+  /**
+   * Helper method to invoke hook_restapi_response.
+   *
+   * @param string $path
+   *   The path.
+   * @param ResourceConfiguration $resource
+   *   The resource configuration.
+   * @param JsonRequest $request
+   *   The HTTP request.
+   *
+   * @return JsonRequest
+   *
+   */
+  protected function invokeHookRequest($path, ResourceConfiguration $resource, JsonRequest $request) {
+
+    foreach(module_implements('restapi_request') as $module) {
+      $func   = $module . '_restapi_request';
+      $result = $func($path, $resource, $request);
+
+      if ($result instanceof JsonRequest) {
+        $request = $result;
+      }
+    }
+
+    return $request;
+  }
+
+
+  /**
+   * Helper method to invoke hook_restapi_response.
+   *
+   * @param string $path
+   *   The path.
+   * @param ResourceConfiguration $resource
+   *   The resource configuration.
+   * @param JsonRequest $request
+   *   The HTTP request.
+   * @param JsonResponse $response
+   *   The HTTP response.
+   *
+   * @return JsonResponse
+   *
+   */
+  protected function invokeHookResponse($path, ResourceConfiguration $resource, JsonRequest $request, JsonResponse $response) {
+
+    foreach(module_implements('restapi_response') as $module) {
+      $func = $module . '_restapi_response';
+      $result = $func($path, $resource, $request, $response);
+
+      if ($result instanceof JsonResponse) {
+        $response = $result;
+      }
+    }
+
+    return $response;
   }
 
 }

@@ -47,6 +47,9 @@ function restapi_menu() {
 /**
  * Implements hook_xautoload().
  *
+ * @param $adapter
+ *   The xautoload adapter.
+ *
  */
 function restapi_xautoload($adapter) {
   if (module_exists('composer_manager')) {
@@ -63,6 +66,9 @@ function restapi_xautoload($adapter) {
 /**
  * Implements hook_modules_enabled().
  *
+ * @param array $modules
+ *   An array of modules being enabled.
+ *
  */
 function restapi_modules_enabled($modules) {
   restapi_get_resources(TRUE);
@@ -71,6 +77,9 @@ function restapi_modules_enabled($modules) {
 
 /**
  * Implements hook_modules_disabled().
+ *
+ * @param array $modules
+ *   An array of modules being disabled.
  *
  */
 function restapi_modules_disabled($modules) {
@@ -81,6 +90,14 @@ function restapi_modules_disabled($modules) {
 /**
  * Implements hook_restapi_request().
  *
+ * @param string $path
+ *   The current API path being requested.
+ * @param ResourceConfiguration $resource
+ *   The resource configuration.
+ * @param JsonRequest $request
+ *   The HTTP request.
+ *
+ * @return JsonRequest|NULL
  */
 function restapi_restapi_request($path, ResourceConfiguration $resource, JsonRequest $request) {
 
@@ -93,6 +110,17 @@ function restapi_restapi_request($path, ResourceConfiguration $resource, JsonReq
 
 /**
  * Implements hook_restapi_response().
+ *
+ * @param string $path
+ *   The current API path being requested.
+ * @param ResourceConfiguration $resource
+ *   The resource configuration.
+ * @param JsonRequest $request
+ *   The HTTP request.
+ * @param JsonResponse $response
+ *   The HTTP response.
+ *
+ * @return JsonResponse|NULL
  *
  */
 function restapi_restapi_response($path, ResourceConfiguration $resource, JsonRequest $request, JsonResponse $response) {
@@ -115,6 +143,9 @@ function restapi_restapi_response($path, ResourceConfiguration $resource, JsonRe
  * Note that this hook will only be fired when the theme is actually called.
  * During an "expected" error as a result of the Drupal\restapi\Api class, this
  * will never be run.
+ *
+ * @param array $theme
+ *   An array of theme definitions.
  *
  */
 function restapi_theme_registry_alter(&$theme) {
@@ -146,6 +177,9 @@ function restapi_theme_registry_alter(&$theme) {
  * not applied, this function will never be called.
  *
  * @see patches/bootstrap.inc.patch
+ *
+ * @param array $log_entry
+ *   An array of data for the message being logged.
  *
  */
 function restapi_watchdog_alter(&$log_entry) {
@@ -441,6 +475,9 @@ function restapi_get_resources($refresh = FALSE) {
  * @param array $data
  *   An array of data to provide the resource. This overrides any data set in
  *   the optional request object.
+ * @param array $headers
+ *   An array of headers to provide the resource. This overrides any headers set
+ *   in the optional request object.
  * @param \StdClass $user
  *   (Optional) The Drupal user to call this resource as. Defaults to the
  *   current user.
@@ -451,12 +488,12 @@ function restapi_get_resources($refresh = FALSE) {
  * @return JsonResponse
  *
  */
-function restapi_execute_resource($method, $path, array $data = [], \StdClass $user = NULL, JsonRequest $request = NULL) {
+function restapi_execute_resource($method, $path, array $data = [], array $headers = [], \StdClass $user = NULL, JsonRequest $request = NULL) {
 
   $request = $request ?: restapi_get_request();
   $user    = $user ?: $GLOBALS['user'];
   $api     = new Api($user, $request);
 
-  return $api->call($method, $path, $data);
+  return $api->call($method, $path, $data, $headers);
 
 }

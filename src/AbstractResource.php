@@ -40,9 +40,7 @@ abstract class AbstractResource implements ResourceInterface {
    * {@inheritdoc}
    *
    */
-  public function access($method = 'get') {
-    return TRUE;
-  }
+  public function access($method = 'get') {}
 
 
   /**
@@ -87,6 +85,26 @@ abstract class AbstractResource implements ResourceInterface {
    */
   public function toJson($data, $status = 200) {
     return JsonResponse::create($data, $status);
+  }
+
+
+  /**
+   * {@inheritdoc}
+   *
+   */
+  public function to403($message = NULL) {
+    $message = $message ?: 'Permission denied';
+    return $this->toError($message, 'unauthenticated', 403);
+  }
+
+
+  /**
+   * {@inheritdoc}
+   *
+   */
+  public function to404($message = NULL) {
+    $message = $message ?: 'Resource not found';
+    return $this->toError($message, 'not_found', 404);
   }
 
 
