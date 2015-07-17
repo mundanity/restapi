@@ -150,11 +150,12 @@ class Api {
     try {
       $request = $this->invokeHookRequest($path, $resource, $request);
 
-      $obj = $resource->invokeResource($this->getUser(), $request);
-      $this->handleAccess($obj, $method);
+      $obj  = $resource->invokeResource($this->getUser(), $request);
+      $args = $resource->getArgumentsForPath($path);
+
+      $this->handleAccess($obj, $method, $args);
       $obj->before();
 
-      $args = $resource->getArgumentsForPath($path);
       $response = call_user_func_array([$obj, $method], $args);
 
       if (!$response instanceof JsonResponse) {
@@ -206,14 +207,16 @@ class Api {
    *   The resource being called.
    * @param string $method
    *   The HTTP method of the request.
+   * @param array $args
+   *   An array of arguments derived from the URL.
    *
    * @throws RestApiException
    * @throws UnauthorizedException
    *
    */
-  protected function handleAccess(ResourceInterface $resource, $method) {
+  protected function handleAccess(ResourceInterface $resource, $method, array $args = []) {
 
-    $result = $resource->access();
+    $result = call_user_func_array([$resource, 'access'], $args);
 
     if ($result === FALSE) {
       throw new UnauthorizedException('Permission denied');
@@ -226,7 +229,7 @@ class Api {
     $access = 'access' . ucfirst($method);
 
     if (method_exists($resource, $access)) {
-      $result = $resource->$access();
+      $result = call_user_func_array([$resource, $access], $args);
 
       if ($result === FALSE) {
         throw new UnauthorizedException('Permission denied');

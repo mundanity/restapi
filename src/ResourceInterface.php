@@ -41,27 +41,25 @@ interface ResourceInterface {
    * This method is called before the HTTP method specific version. e.g.
    * Resource::access() will be called before Resource::accessGet().
    *
-   * @param string $method
-   *   The lowercase HTTP method that is being called. (e.g. "get"). The HTTP
-   *   method can be derived from the request object, but is provided here for
-   *   convenience.
-   *
    */
-  public function access($method = 'get');
+  public function access();
 
 
   /**
    * A more specific access call will be called for the current HTTP method.
    * e.g. accessGet(), accessPost(), accessPut(), etc.
    *
+   * <code>
+   *   public function accessGet();
+   *   public function accessPost();
+   *   public function accessPut();
+   *   public function accessPatch();
+   *   public function accessDelete();
+   *   public function accessHead();
+   *   public function accessOptions();
+   * </code>
+   *
    */
-  // public function accessGet();
-  // public function accessPost();
-  // public function accessPut();
-  // public function accessPatch();
-  // public function accessDelete();
-  // public function accessHead();
-  // public function accessOptions();
 
 
   /**
