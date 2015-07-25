@@ -27,6 +27,15 @@ abstract class AbstractResource implements ResourceInterface {
 
 
   /**
+   * An array of required parameters.
+   *
+   * @var array
+   *
+   */
+  protected $required_params = [];
+
+
+  /**
    * {@inheritdoc}
    *
    */
@@ -40,7 +49,18 @@ abstract class AbstractResource implements ResourceInterface {
    * {@inheritdoc}
    *
    */
-  public function access() {}
+  public function requireParameter($name, callable $validator = NULL) {
+    $this->required_params[$name] = $validator ?: TRUE;
+  }
+
+
+  /**
+   * {@inheritdoc}
+   *
+   */
+  public function getRequiredParameters() {
+    return $this->required_params;
+  }
 
 
   /**

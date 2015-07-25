@@ -41,13 +41,20 @@ interface ResourceInterface {
    * This method is called before the HTTP method specific version. e.g.
    * Resource::access() will be called before Resource::accessGet().
    *
+   * Arguments from the URL will be passed to the method.
+   *
+   * <code>
+   *   public function access();
+   * </code>
+   *
    */
-  public function access();
 
 
   /**
    * A more specific access call will be called for the current HTTP method.
    * e.g. accessGet(), accessPost(), accessPut(), etc.
+   *
+   * Arguments from the URL will be passed as parameters to the method.
    *
    * <code>
    *   public function accessGet();
@@ -63,7 +70,8 @@ interface ResourceInterface {
 
 
   /**
-   * Handles logic before the main request is processed.
+   * Handles logic before the main request is processed. This is a good place to
+   * add any required parameters.
    *
    */
   public function before();
@@ -81,6 +89,41 @@ interface ResourceInterface {
    *
    */
   public function after(JsonResponse $response);
+
+
+  /**
+   * Signifies that a parameter is required. For GET requests, parameters will
+   * be looked for in the query string. For all others, parameters will be
+   * looked for within the request body.
+   *
+   * If the parameter is not available, the request will return a HTTP 400
+   * error.
+   *
+   * Required parameters are evaluated BEFORE ResourceInterface::access() and
+   * ResourceInterface::access{METHOD} are called, and can be defined in
+   * ResourceInterface::before(), or in a custom constructor.
+   *
+   * @param string $name
+   *   The name of the required parameter.
+   * @param callable $validator
+   *   An optional callable that can additionally validate the parameter. The
+   *   parameter's value will be passed to the validator. The validator MUST
+   *   return either true (the value is valid) or false (the value is invalid).
+   *
+   */
+  public function requireParameter($name, callable $validator = NULL);
+
+
+  /**
+   * Returns an array of required parameters.
+   *
+   * The key of the array is the required parameter's name, while the value is
+   * the optional callable (or TRUE, if no callable was declared).
+   *
+   * @return array
+   *
+   */
+  public function getRequiredParameters();
 
 
   /**

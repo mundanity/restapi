@@ -4,6 +4,8 @@ namespace Drupal\restapi;
 
 use Drupal\restapi\Exception\RestApiException;
 use Drupal\restapi\Exception\UnauthorizedException;
+use Drupal\restapi\Exception\MissingParametersException;
+use Drupal\restapi\Exception\InvalidParametersException;
 use Exception;
 
 
@@ -152,9 +154,10 @@ class Api {
 
       $obj  = $resource->invokeResource($this->getUser(), $request);
       $args = $resource->getArgumentsForPath($path);
-
-      $this->handleAccess($obj, $method, $args);
       $obj->before();
+
+      $this->handleRequiredParameters($obj, $request);
+      $this->handleAccess($obj, $method, $args);
 
       $response = call_user_func_array([$obj, $method], $args);
 
@@ -201,6 +204,48 @@ class Api {
 
 
   /**
+   * Handles required parameters.
+   *
+   * @param ResourceInterface $resource
+   *   The resource being called.
+   * @param JsonRequest $request
+   *   The HTTP reqeust.
+   *
+   * @throws MissingParametersException
+   * @throws InvalidParametersException
+   *
+   */
+  protected function handleRequiredParameters(ResourceInterface $resource, JsonRequest $request) {
+
+    $required = $resource->getRequiredParameters();
+    $params   = strtoupper($request->getMethod()) == 'GET' ? $request->getQueryParams() : $request->getParsedBody();
+    $invalid  = [];
+    $missing  = [];
+
+    foreach($required as $param => $callable) {
+      if (empty($params[$param])) {
+        $missing[] = $param;
+        continue;
+      }
+
+      if (is_callable($callable) && !$callable($params[$param])) {
+        $invalid[] = $param;
+      }
+    }
+
+    if ($missing) {
+      $message = sprintf('Missing required parameter(s): %s', implode(', ', $missing));
+      throw new MissingParametersException($message, 400);
+    }
+
+    if ($invalid) {
+      $message = sprintf('Invalid values for parameter(s): %s', implode(', ', $invalid));
+      throw new InvalidParametersException($message, 400);
+    }
+  }
+
+
+  /**
    * Handles access for the resource being called.
    *
    * @param ResourceInterface $resource
@@ -216,15 +261,17 @@ class Api {
    */
   protected function handleAccess(ResourceInterface $resource, $method, array $args = []) {
 
-    $result = call_user_func_array([$resource, 'access'], $args);
+    if (method_exists($resource, 'access')) {
+      $result = call_user_func_array([$resource, 'access'], $args);
 
-    if ($result === FALSE) {
-      throw new UnauthorizedException('Permission denied');
-    }
+      if ($result === FALSE) {
+        throw new UnauthorizedException('You do not have permission to access this resource.');
+      }
 
-    if ($result instanceof JsonResponse) {
-      $body = json_decode((string) $result->getBody(), TRUE);
-      throw new RestApiException($body['message'], $result->getStatusCode(), NULL, $body['error']);
+      if ($result instanceof JsonResponse) {
+        $body = json_decode((string) $result->getBody(), TRUE);
+        throw new RestApiException($body['message'], $result->getStatusCode(), NULL, $body['error']);
+      }
     }
 
     $access = 'access' . ucfirst($method);
@@ -233,7 +280,7 @@ class Api {
       $result = call_user_func_array([$resource, $access], $args);
 
       if ($result === FALSE) {
-        throw new UnauthorizedException('Permission denied');
+        throw new UnauthorizedException('You do not have permission to access this resource.');
       }
 
       if ($result instanceof JsonResponse) {
