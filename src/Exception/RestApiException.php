@@ -18,6 +18,25 @@ use Exception;
 class RestApiException extends Exception {
 
   /**
+   * Constructor
+   *
+   * @param string $message
+   *   The message.
+   * @param int $code
+   *   The HTTP error code.
+   * @param Exception $previous
+   *   The parent exception, if relevant.
+   * @param string $short_message
+   *   The machine readable category.
+   *
+   */
+  public function __construct($message, $code = 0, Exception $previous = NULL, $short_message = 'system') {
+    parent::__construct($message, $code, $previous);
+    $this->short_message = $short_message;
+  }
+
+
+  /**
    * The code should be set to a valid HTTP status code.
    *
    */
@@ -25,11 +44,10 @@ class RestApiException extends Exception {
 
 
   /**
-   * The exception should override __toString().
+   * Returns a machine readable "category" for the exception.
    *
    */
-  // public function __toString() {
-  //   return 'short_name';
-  // }
-
+  public function __toString() {
+    return $this->short_message;
+  }
 }

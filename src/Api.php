@@ -223,7 +223,8 @@ class Api {
     }
 
     if ($result instanceof JsonResponse) {
-      throw new RestApiException((string) $result->getBody(), $result->getStatusCode());
+      $body = json_decode((string) $result->getBody(), TRUE);
+      throw new RestApiException($body['message'], $result->getStatusCode(), NULL, $body['error']);
     }
 
     $access = 'access' . ucfirst($method);
@@ -236,7 +237,8 @@ class Api {
       }
 
       if ($result instanceof JsonResponse) {
-        throw new RestApiException((string) $result->getBody(), $result->getStatusCode());
+        $body = json_decode((string) $result->getBody(), TRUE);
+        throw new RestApiException($body['message'], $result->getStatusCode(), NULL, $body['error']);
       }
     }
   }
