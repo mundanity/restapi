@@ -45,11 +45,18 @@ class ServerRequestFactory extends AbstractServerRequestFactory {
       $headers
     );
 
-    $is_json = strpos(static::get('HTTP_ACCEPT', $server), 'application/json') !== FALSE;
+    $is_json = strpos(static::get('CONTENT_TYPE', $server), 'application/json') !== FALSE;
     $vars_in_body = in_array($method, ['PUT', 'POST', 'PATCH', 'DELETE']);
 
-    if ($is_json && $vars_in_body) {
-      $body = json_decode($content ? $content->getContents() : file_get_contents('php://input'), TRUE);
+    if ($vars_in_body) {
+
+      $data = $content ? $content->getContents() : file_get_contents('php://input');
+
+      if ($is_json) {
+        $body = json_decode($data, TRUE);
+      } else {
+        parse_str($data, $body);
+      }
     }
 
     return $request
