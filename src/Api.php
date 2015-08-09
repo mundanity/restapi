@@ -7,6 +7,7 @@ use Drupal\restapi\Exception\UnauthorizedException;
 use Drupal\restapi\Exception\MissingParametersException;
 use Drupal\restapi\Exception\InvalidParametersException;
 use Exception;
+use Psr\Http\Message\ResponseInterface;
 
 
 /**
@@ -161,8 +162,8 @@ class Api {
 
       $response = call_user_func_array([$obj, $method], $args);
 
-      if (!$response instanceof JsonResponse) {
-        $message = sprintf('%s::%s() must return an instance of JsonResponse.', $resource->getClass(), $method);
+      if (!$response instanceof ResponseInterface) {
+        $message = sprintf('%s::%s() must return an instance of ResponseInterface.', $resource->getClass(), $method);
         throw new Exception($message);
       }
 
@@ -328,19 +329,19 @@ class Api {
    *   The resource configuration.
    * @param JsonRequest $request
    *   The HTTP request.
-   * @param JsonResponse $response
+   * @param ResponseInterface $response
    *   The HTTP response.
    *
    * @return JsonResponse
    *
    */
-  protected function invokeHookResponse($path, ResourceConfiguration $resource, JsonRequest $request, JsonResponse $response) {
+  protected function invokeHookResponse($path, ResourceConfiguration $resource, JsonRequest $request, ResponseInterface $response) {
 
     foreach(module_implements('restapi_response') as $module) {
       $func = $module . '_restapi_response';
       $result = $func($path, $resource, $request, $response);
 
-      if ($result instanceof JsonResponse) {
+      if ($result instanceof ResponseInterface) {
         $response = $result;
       }
     }

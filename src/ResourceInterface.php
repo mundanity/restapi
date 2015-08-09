@@ -2,6 +2,7 @@
 
 namespace Drupal\restapi;
 
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Exception;
 
@@ -84,11 +85,11 @@ interface ResourceInterface {
    * Note that this method will not be called if the main method, e.g. get() or
    * post(), does NOT return a JsonResponse object.
    *
-   * @param JsonResponse $response
+   * @param ResponseInterface $response
    *   The response object after the request has been handled.
    *
    */
-  public function after(JsonResponse $response);
+  public function after(ResponseInterface $response);
 
 
   /**
