@@ -3,6 +3,7 @@
 use Drupal\restapi\Api;
 use Drupal\restapi\JsonRequest;
 use Drupal\restapi\JsonResponse;
+use Psr\Http\Message\ResponseInterface;
 use Drupal\restapi\ServerRequestFactory;
 use Drupal\restapi\ResourceConfiguration;
 use Drupal\restapi\Exception\ClassNotValidException;
@@ -117,13 +118,13 @@ function restapi_restapi_request($path, ResourceConfiguration $resource, JsonReq
  *   The resource configuration.
  * @param JsonRequest $request
  *   The HTTP request.
- * @param JsonResponse $response
+ * @param ResponseInterface $response
  *   The HTTP response.
  *
  * @return JsonResponse|NULL
  *
  */
-function restapi_restapi_response($path, ResourceConfiguration $resource, JsonRequest $request, JsonResponse $response) {
+function restapi_restapi_response($path, ResourceConfiguration $resource, JsonRequest $request, ResponseInterface $response) {
 
   if (variable_get('restapi_debug')) {
     $timer = timer_stop('restapi-' . $path);
@@ -231,8 +232,8 @@ function restapi_access_callback(ResourceConfiguration $resource) {
  * Delivery callback for API responses.
  *
  * @param mixed $response
- *   Generally, a JsonResponse object, or an integer provided by the Drupal menu
- *   system.
+ *   Generally, a ResponseInterface object, or an integer provided by the Drupal
+ *   menu system.
  *
  */
 function restapi_delivery_callback($response) {
@@ -277,7 +278,7 @@ function restapi_delivery_callback($response) {
     ], $status);
 
   }
-  elseif (!($response instanceof JsonResponse)) {
+  elseif (!($response instanceof ResponseInterface)) {
     watchdog('restapi', '@id: The callback for the path "@path" returned an incorrect response. Expecting an instance of Response, or a Drupal constant (MENU_NOT_FOUND, MENU_ACCESS_DENIED, MENU_SITE_OFFLINE). Received response of type "@type"', [
       '@id'   => $request->getRequestId(),
       '@path' => current_path(),
@@ -294,7 +295,9 @@ function restapi_delivery_callback($response) {
 
   // For requests in the browser, we'll try to show the output in a more
   // pleasant way.
-  if (!$request->isJson() && strpos($request->getHeaderLine('Accept'), 'text/html') !== FALSE) {
+  if (!$request->isJson() &&
+      strpos($response->getHeaderLine('content-type'), 'application/json') !== FALSE &&
+      strpos($request->getHeaderLine('Accept'), 'text/html') !== FALSE) {
     return restapi_deliver_html($response);
   }
 
@@ -309,10 +312,10 @@ function restapi_delivery_callback($response) {
  * Delivers the JSON in a HTML wrapper, for easier browser viewing and
  * debugging.
  *
- * @param JsonResponse $response
+ * @param ResponseInterface $response
  *
  */
-function restapi_deliver_html(JsonResponse $response) {
+function restapi_deliver_html(ResponseInterface $response) {
 
   $response = $response->withHeader('Content-Type', 'text/html');
   $headers = $response->getHeaders();

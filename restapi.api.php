@@ -2,7 +2,7 @@
 
 use Drupal\restapi\ResourceConfiguration;
 use Drupal\restapi\JsonRequest;
-use Drupal\restapi\JsonResponse;
+use Psr\Http\Message\ResponseInterface;
 
 
 /**
@@ -85,7 +85,7 @@ function hook_restapi_request($path, ResourceConfiguration $resource, JsonReques
  *   A ResourceConfiguration object.
  * @param JsonRequest $request
  *   A read only copy of the request object.
- * @param JsonResponse $response
+ * @param ResponseInterface $response
  *   The response object.
  *
  * @return mixed
@@ -94,7 +94,7 @@ function hook_restapi_request($path, ResourceConfiguration $resource, JsonReques
  *   available downstream.
  *
  */
-function hook_restapi_response($path, ResourceConfiguration $resource, JsonRequest $request, JsonResponse $response) {
+function hook_restapi_response($path, ResourceConfiguration $resource, JsonRequest $request, ResponseInterface $response) {
 
   // Set a friendly message in outgoing headers.
   return $response->withHeader('X-Daily-Message', t('Have a great day!'));

@@ -2,6 +2,7 @@
 
 namespace Drupal\restapi;
 
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 
@@ -74,7 +75,7 @@ abstract class AbstractResource implements ResourceInterface {
    * {@inheritdoc}
    *
    */
-  public function after(JsonResponse $response) {}
+  public function after(ResponseInterface $response) {}
 
 
   /**
