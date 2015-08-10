@@ -1,6 +1,5 @@
 <?php
 
-use Drupal\restapi\JsonRequest;
 use Drupal\restapi\ServerRequestFactory;
 
 

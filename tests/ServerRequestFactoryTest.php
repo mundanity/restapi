@@ -46,7 +46,7 @@ class ServerRequestFactoryTest extends PHPUnit_Framework_TestCase {
   public function testJsonStringIsSetAsParsedData() {
 
     $server = [
-      'HTTP_ACCEPT' => 'application/json',
+      'CONTENT_TYPE' => 'application/json',
       'REQUEST_METHOD' => 'POST',
     ];
 
@@ -61,11 +61,11 @@ class ServerRequestFactoryTest extends PHPUnit_Framework_TestCase {
 
 
   /**
-   * Ensures that fromGlobals does not set the parsed body when the HTTP accept
-   * header does not contain application/json.
+   * Ensures that fromGlobals does not set the parsed body when the HTTP content
+   * type header is not application/json.
    *
    */
-  public function testNoParsedDataIfAcceptDoesNotContainApplicationJson() {
+  public function testNoParsedDataIfContentTypeIsNotApplicationJson() {
 
     $server =[
       'REQUEST_METHOD' => 'POST',
@@ -74,7 +74,7 @@ class ServerRequestFactoryTest extends PHPUnit_Framework_TestCase {
     $content = new Stream('data://text/plain,{"test":"testing"}');
     $request = ServerRequestFactory::fromGlobals($server, null, null, null, null, $content);
 
-    $this->assertEquals([], $request->getParsedBody());
+    $this->assertEquals(['{"test":"testing"}' => ''], $request->getParsedBody());
 
   }
 
@@ -87,7 +87,7 @@ class ServerRequestFactoryTest extends PHPUnit_Framework_TestCase {
   public function testNoParsedDataIfHttpMethodIsGet() {
 
     $server =[
-      'HTTP_ACCEPT' => 'application/json',
+      'CONTENT_TYPE' => 'application/json',
     ];
 
     $content = new Stream('data://text/plain,{"test":"testing"}');

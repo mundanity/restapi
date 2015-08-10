@@ -16,7 +16,8 @@ class ServerRequestFactory extends AbstractServerRequestFactory {
    * {@inheritdoc}
    *
    * @param StreamInterface $content
-   *   (Optional) The content to override the input stream with.
+   *   (Optional) The content to override the input stream with. This is mainly
+   *   here for testing purposes.
    *
    */
   public static function fromGlobals(
@@ -51,12 +52,17 @@ class ServerRequestFactory extends AbstractServerRequestFactory {
     if ($vars_in_body) {
 
       $data = $content ? $content->getContents() : file_get_contents('php://input');
+      $body = $body ?: [];
+      $new  = [];
 
       if ($is_json) {
-        $body = json_decode($data, TRUE);
+        $new = json_decode($data, TRUE);
       } else {
-        parse_str($data, $body);
+        parse_str($data, $new);
       }
+
+      // Merge in data to $body.
+      $body = array_merge($body, $new);
     }
 
     return $request
