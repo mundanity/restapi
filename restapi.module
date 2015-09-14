@@ -255,7 +255,7 @@ function restapi_delivery_callback($response) {
       // requests, this is assumed to be an authentication check.
       case MENU_ACCESS_DENIED:
         $error   = 'unauthenticated';
-        $status  = 403;
+        $status  = 401;
         $message = t('Your credentials could not be verified.');
         break;
 
