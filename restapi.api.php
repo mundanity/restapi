@@ -2,7 +2,9 @@
 
 use Drupal\restapi\ResourceConfiguration;
 use Drupal\restapi\JsonRequest;
+use Drupal\restapi\JsonResponse;
 use Psr\Http\Message\ResponseInterface;
+use Drupal\restapi\Exception\RestApiException;
 
 
 /**
@@ -98,4 +100,31 @@ function hook_restapi_response($path, ResourceConfiguration $resource, JsonReque
 
   // Set a friendly message in outgoing headers.
   return $response->withHeader('X-Daily-Message', t('Have a great day!'));
+}
+
+
+/**
+ * Allows for modification of the response depending on the exception thrown
+ * while attempting to execute the request.
+ *
+ * If a previous module has already generated a ResponseInterface object based
+ * on a specific exception, the response will be included as the second
+ * parameter.
+ *
+ * @param Exception $e
+ *   The exception that was thrown.
+ * @param ResponseInterface $response
+ *   A ResponseInterface object, if a previous module has already responded to
+ *   this exception.
+ *
+ * @return ResponseInterface|NULL
+ *
+ */
+function hook_restapi_exception(Exception $e, ResponseInterface $response = NULL) {
+
+  if ($e instanceof RestApiException) {
+    $response = JsonResponse::create("This is my modified response");
+  }
+
+  return $response;
 }

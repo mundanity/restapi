@@ -8,6 +8,7 @@ use Drupal\restapi\ServerRequestFactory;
 use Drupal\restapi\ResourceConfiguration;
 use Drupal\restapi\Exception\ClassNotValidException;
 use Drupal\restapi\Exception\AuthClassNotValidException;
+use Drupal\restapi\Exception\RestApiException;
 use Zend\Diactoros\Response\SapiEmitter;
 
 
@@ -131,6 +132,31 @@ function restapi_restapi_response($path, ResourceConfiguration $resource, JsonRe
     return $response->withHeader('X-Debug-Call-Time', $timer['time'] . 'ms');
   }
 
+}
+
+
+/**
+ * Implements hook_restapi_exception().
+ *
+ * @param Exception $e
+ *   The exception to inspect.
+ * @param ResponseInterface $response
+ *   The ResponseInterface, if a previous module has generated one already.
+ *
+ * @return ResponseInterface|NULL
+ *
+ */
+function restapi_restapi_exception(Exception $e, ResponseInterface $response = NULL) {
+
+  if ($e instanceof RestApiException) {
+    $data = [
+      'code'    => (string) $e,
+      'message' => $e->getMessage(),
+    ];
+    $response = JsonResponse::create($data, $e->getCode());
+  }
+
+  return $response;
 }
 
 
