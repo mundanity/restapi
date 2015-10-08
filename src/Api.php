@@ -358,7 +358,7 @@ class Api {
    * @param Exception $e
    *   The exception that is being thrown.
    *
-   * @return JsonResponse|NULL
+   * @return ResponseInterface|NULL
    *
    */
   protected function invokeHookException(Exception $e) {
@@ -369,7 +369,7 @@ class Api {
       $func   = $module . '_restapi_exception';
       $result = $func($e, $response);
 
-      if ($result instanceof JsonResponse) {
+      if ($result instanceof ResponseInterface) {
         $response = $result;
       }
     }
