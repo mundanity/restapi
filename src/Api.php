@@ -169,11 +169,13 @@ class Api {
 
       $obj->after($response);
     }
-    catch (RestApiException $e) {
-      $response = $this->toError($e->getMessage(), (string) $e, $e->getCode());
-    }
     catch (Exception $e) {
-      $response = $this->toError($e->getMessage());
+
+      $response = $this->invokeHookException($e);
+
+      if (!$response) {
+        $response = $this->toError($e->getMessage());
+      }
     }
 
     $response = $this->invokeHookResponse($path, $resource, $request, $response);
@@ -338,7 +340,7 @@ class Api {
   protected function invokeHookResponse($path, ResourceConfiguration $resource, JsonRequest $request, ResponseInterface $response) {
 
     foreach(module_implements('restapi_response') as $module) {
-      $func = $module . '_restapi_response';
+      $func   = $module . '_restapi_response';
       $result = $func($path, $resource, $request, $response);
 
       if ($result instanceof ResponseInterface) {
@@ -349,4 +351,29 @@ class Api {
     return $response;
   }
 
+
+  /**
+   * Helper method to invoke hook_restapi_exception.
+   *
+   * @param Exception $e
+   *   The exception that is being thrown.
+   *
+   * @return ResponseInterface|NULL
+   *
+   */
+  protected function invokeHookException(Exception $e) {
+
+    $response = NULL;
+
+    foreach(module_implements('restapi_exception') as $module) {
+      $func   = $module . '_restapi_exception';
+      $result = $func($e, $response);
+
+      if ($result instanceof ResponseInterface) {
+        $response = $result;
+      }
+    }
+
+    return $response;
+  }
 }
