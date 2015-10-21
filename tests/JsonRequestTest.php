@@ -23,6 +23,19 @@ class JsonRequestTest extends PHPUnit_Framework_TestCase {
 
 
   /**
+   * Ensures that get() works as expected for DELETE requests.
+   *
+   */
+  public function testGetWithHttpDelete() {
+
+    $server['REQUEST_METHOD'] = 'DELETE';
+
+    $request = ServerRequestFactory::fromGlobals($server, ['var' => 'set']);
+    $this->assertEquals('set', $request->get('var'));
+  }
+
+
+  /**
    * Ensures that get() ignores a query param if using making a non-GET HTTP
    * request.
    *
@@ -37,7 +50,7 @@ class JsonRequestTest extends PHPUnit_Framework_TestCase {
 
 
   /**
-   * Ensures that get() works as expected for PUT, POST, DELETE, and PATCH
+   * Ensures that get() works as expected for PUT, POST, and PATCH
    * requests.
    *
    */
@@ -54,11 +67,6 @@ class JsonRequestTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals('set', $request->get('var'));
 
     $server['REQUEST_METHOD'] = 'PATCH';
-
-    $request = ServerRequestFactory::fromGlobals($server, null, ['var' => 'set']);
-    $this->assertEquals('set', $request->get('var'));
-
-    $server['REQUEST_METHOD'] = 'DELETE';
 
     $request = ServerRequestFactory::fromGlobals($server, null, ['var' => 'set']);
     $this->assertEquals('set', $request->get('var'));

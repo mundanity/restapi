@@ -32,7 +32,8 @@ class JsonRequest extends ServerRequest {
    *
    */
   public function get($param, $default = NULL) {
-    $items = (strtolower($this->getMethod()) == 'get') ? $this->getQueryParams() : $this->getParsedBody();
+    $method = strtolower($this->getMethod());
+    $items  = ($method == 'get' || $method == 'delete') ? $this->getQueryParams() : $this->getParsedBody();
     return isset($items[$param]) ? $items[$param] : $default;
   }
 
