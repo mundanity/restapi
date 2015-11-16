@@ -13,6 +13,15 @@ use Psr\Http\Message\ServerRequestInterface;
 abstract class AbstractResource implements ResourceInterface {
 
   /**
+   * A HTTP response factory.
+   *
+   * @var HttpResponseFactory
+   *
+   */
+  protected $http = NULL;
+
+
+  /**
    * A HTTP Request object.
    *
    * @var ServerRequestInterface
@@ -40,9 +49,10 @@ abstract class AbstractResource implements ResourceInterface {
    * {@inheritdoc}
    *
    */
-  public function __construct(\StdClass $user, ServerRequestInterface $request) {
-    $this->user = $user;
+  public function __construct(\StdClass $user, ServerRequestInterface $request, HttpResponseFactory $http = NULL) {
+    $this->user    = $user;
     $this->request = $request;
+    $this->http    = $http ?: new HttpResponseFactory();
   }
 
 
@@ -105,7 +115,7 @@ abstract class AbstractResource implements ResourceInterface {
    *
    */
   public function toJson($data, $status = 200) {
-    return JsonResponse::create($data, $status);
+    return $this->http->toJson($data, $status);
   }
 
 
@@ -114,8 +124,7 @@ abstract class AbstractResource implements ResourceInterface {
    *
    */
   public function to403($message = NULL) {
-    $message = $message ?: 'Permission denied';
-    return $this->toError($message, 'unauthenticated', 403);
+    return $this->http->to403($message);
   }
 
 
@@ -124,8 +133,7 @@ abstract class AbstractResource implements ResourceInterface {
    *
    */
   public function to404($message = NULL) {
-    $message = $message ?: 'Resource not found';
-    return $this->toError($message, 'not_found', 404);
+    return $this->http->to404($message);
   }
 
 
@@ -134,11 +142,7 @@ abstract class AbstractResource implements ResourceInterface {
    *
    */
   public function toError($message, $code = 'system', $status = 500) {
-    $data = [
-      'error'   => $code,
-      'message' => $message,
-    ];
-    return $this->toJson($data, $status);
+    return $this->http->toError($message, $code, $status);
   }
 
 }

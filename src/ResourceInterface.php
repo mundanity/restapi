@@ -4,7 +4,6 @@ namespace Drupal\restapi;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Exception;
 
 
 /**
@@ -13,8 +12,6 @@ use Exception;
  * Implementing classes should add one or more methods that correspond to the
  * HTTP method desired. (e.g. MyResource::get() to response to a GET request).
  * These methods must return a HTTP Request object.
- *
- *
  *
  */
 interface ResourceInterface {
@@ -26,9 +23,11 @@ interface ResourceInterface {
    *   A Drupal user object.
    * @param ServerRequestInterface $request
    *   A HTTP request.
+   * @param HttpResponseFactory $http
+   *   A HTTP response factory.
    *
    */
-  public function __construct(\StdClass $user, ServerRequestInterface $request);
+  public function __construct(\StdClass $user, ServerRequestInterface $request, HttpResponseFactory $http = NULL);
 
 
   /**
@@ -136,6 +135,8 @@ interface ResourceInterface {
    *  The HTTP status code for this response.
    *
    * @return JsonResponse
+   *
+   * @deprecated To be replaced with a more generic toResponse() or similar.
    *
    */
   public function toJson($data, $status = 200);
