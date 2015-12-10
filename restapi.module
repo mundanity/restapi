@@ -266,6 +266,9 @@ function restapi_delivery_callback($response) {
 
   $request = restapi_get_request();
 
+  // Clean up the stack of messages.
+  drupal_get_messages();
+
   // The menu system may return one of these integers.
   if (is_int($response)) {
     switch ($response) {
