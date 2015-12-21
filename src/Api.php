@@ -212,7 +212,7 @@ class Api {
    * @param ResourceInterface $resource
    *   The resource being called.
    * @param JsonRequest $request
-   *   The HTTP reqeust.
+   *   The HTTP request.
    *
    * @throws MissingParametersException
    * @throws InvalidParametersException
