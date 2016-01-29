@@ -14,8 +14,16 @@ class DrupalAuthenticationService extends AbstractAuthenticationService {
    * {@inheritdoc}
    *
    */
-  public function isValid() {
-    return user_access('access content', $this->getUser());
+  public function authenticate() {
+    if (!user_is_logged_in()) {
+      return FALSE;
+    }
+
+    if (!user_access('access content', $this->getUser())) {
+      return FALSE;
+    }
+
+    return $this->getUser();
   }
 
 }

@@ -25,8 +25,8 @@ function restapi_menu() {
 
     $items[$resource->getPath()] = [
       'page callback'     => 'restapi_page_callback',
-      'access callback'   => 'restapi_access_callback',
-      'access arguments'  => [$resource],
+      'page arguments'    => [$resource],
+      'access callback'   => TRUE,
       'delivery callback' => 'restapi_delivery_callback',
       'type'              => MENU_CALLBACK,
     ];
@@ -218,39 +218,33 @@ function restapi_watchdog_alter(&$log_entry) {
 /**
  * Page callback to handle an API call from the Drupal menu system.
  *
- * @return JsonResponse
- *
- */
-function restapi_page_callback() {
-
-  global $user;
-
-  $request = restapi_get_request();
-  $api     = new Api($user, $request);
-
-  return $api->call($request->getMethod(), current_path());
-
-}
-
-
-/**
- * Handles the authentication.
- *
  * @param ResourceConfiguration $resource
  *   The resource that is being accessed, as defined in restapi_get_resources().
  *
- * @return boolean
+ * @return JsonResponse
  *
  */
-function restapi_access_callback(ResourceConfiguration $resource) {
+function restapi_page_callback(ResourceConfiguration $resource) {
 
   global $user;
 
   $request = restapi_get_request();
   $auth    = $resource->invokeAuthenticationService($user, $request);
 
-  return $auth->isValid();
+  try {
+    $account = $auth->authenticate();
+  }
+  catch (Exception $e) {
+    return restapi_invoke_hook_exception($e);
+  }
 
+  if (!$account) {
+    return MENU_ACCESS_DENIED;
+  }
+
+  $api = new Api($account, $request);
+
+  return $api->call($request->getMethod(), current_path());
 }
 
 
@@ -555,4 +549,30 @@ function restapi_get_url_prefix() {
   // If a URL prefix is set, and not included in the path, add it.
   $prefix = variable_get('restapi_url_prefix');
   return rtrim(ltrim(trim($prefix), '/'), '/');
+}
+
+
+/**
+ * Helper function to invoke hook_restapi_exception.
+ *
+ * @param Exception $e
+ *   The exception that is being thrown.
+ *
+ * @return ResponseInterface|NULL
+ *
+ */
+function restapi_invoke_hook_exception(Exception $e) {
+
+  $response = NULL;
+
+  foreach(module_implements('restapi_exception') as $module) {
+    $func   = $module . '_restapi_exception';
+    $result = $func($e, $response);
+
+    if ($result instanceof ResponseInterface) {
+      $response = $result;
+    }
+  }
+
+  return $response;
 }
