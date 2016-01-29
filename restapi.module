@@ -446,7 +446,7 @@ function restapi_get_resources($refresh = FALSE) {
   $modules      = module_implements('restapi_resources');
   $items        = [];
   $default_auth = variable_get('restapi_default_auth_class') ?: 'Drupal\restapi\Auth\DrupalAuthenticationService';
-  $url_prefix   = variable_get('restapi_url_prefix');
+  $url_prefix   = restapi_get_url_prefix();
 
   foreach($modules as $module) {
 
@@ -527,10 +527,32 @@ function restapi_get_resources($refresh = FALSE) {
  */
 function restapi_execute_resource($method, $path, array $data = [], array $headers = [], \StdClass $user = NULL, JsonRequest $request = NULL) {
 
+  $path  = ltrim(trim($path), '/');
+  $prefix = restapi_get_url_prefix();
+
+  // If a URL prefix is set, and not included in the path, add it.
+  if ($prefix && strpos($prefix, $path) !== 0) {
+    $path = $prefix . '/' . $path;
+  }
+
   $request = $request ?: restapi_get_request();
   $user    = $user ?: $GLOBALS['user'];
   $api     = new Api($user, $request);
 
   return $api->call($method, $path, $data, $headers);
 
+}
+
+
+/**
+ * Helper function to return a sanitized restapi url prefix if one is set.
+ *
+ * @return mixed $response
+ *   The sanitized restapi url prefix string if it is set, NULL if it is not.
+ *
+ */
+function restapi_get_url_prefix() {
+  // If a URL prefix is set, and not included in the path, add it.
+  $prefix = variable_get('restapi_url_prefix');
+  return rtrim(ltrim(trim($prefix), '/'), '/');
 }
