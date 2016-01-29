@@ -171,7 +171,7 @@ class Api {
     }
     catch (Exception $e) {
 
-      $response = $this->invokeHookException($e);
+      $response = restapi_invoke_hook_exception($e);
 
       if (!$response) {
         $response = $this->toError($e->getMessage());
@@ -342,32 +342,6 @@ class Api {
     foreach(module_implements('restapi_response') as $module) {
       $func   = $module . '_restapi_response';
       $result = $func($path, $resource, $request, $response);
-
-      if ($result instanceof ResponseInterface) {
-        $response = $result;
-      }
-    }
-
-    return $response;
-  }
-
-
-  /**
-   * Helper method to invoke hook_restapi_exception.
-   *
-   * @param Exception $e
-   *   The exception that is being thrown.
-   *
-   * @return ResponseInterface|NULL
-   *
-   */
-  protected function invokeHookException(Exception $e) {
-
-    $response = NULL;
-
-    foreach(module_implements('restapi_exception') as $module) {
-      $func   = $module . '_restapi_exception';
-      $result = $func($e, $response);
 
       if ($result instanceof ResponseInterface) {
         $response = $result;

@@ -42,7 +42,7 @@ abstract class AbstractAuthenticationService implements AuthenticationServiceInt
    * {@inheritdoc}
    *
    */
-  abstract public function isValid();
+  abstract public function authenticate();
 
 
   /**

@@ -24,11 +24,12 @@ interface AuthenticationServiceInterface {
 
 
   /**
-   * Determines if the request is valid or not.
+   * Authenticates the request.
    *
-   * @return boolean
+   * @return \StdClass|FALSE
+   *   If successful, the user the request authenticated for; FALSE otherwise.
    *
    */
-  public function isValid();
+  public function authenticate();
 
 }
