@@ -273,12 +273,17 @@ class ResourceConfiguration {
    */
   protected function resolveTruePath($path, $prefix = NULL) {
 
+    $path   = ltrim(trim($path), '/');
+    $prefix = rtrim(ltrim(trim($prefix), '/'), '/');
+
+    // Map path of "ROOT" to the prefix.
+    if ($path == "ROOT") {
+      return $prefix ?: '/';
+    }
+
     if (!$prefix) {
       return $path;
     }
-
-    $path   = ltrim(trim($path), '/');
-    $prefix = rtrim(ltrim(trim($prefix), '/'), '/');
 
     return $prefix . '/' . $path;
 
