@@ -2,10 +2,10 @@
 
 namespace Drupal\restapi;
 
+use Drupal\restapi\Exception\InvalidParametersException;
+use Drupal\restapi\Exception\MissingParametersException;
 use Drupal\restapi\Exception\RestApiException;
 use Drupal\restapi\Exception\UnauthorizedException;
-use Drupal\restapi\Exception\MissingParametersException;
-use Drupal\restapi\Exception\InvalidParametersException;
 use Exception;
 use Psr\Http\Message\ResponseInterface;
 
@@ -128,14 +128,26 @@ class Api {
       return $this->toError($message, 'not_found', 404);
     }
 
-    if (!method_exists($resource->getClass(), $method)) {
-      $message = sprintf('The method "%s" is not available for the resource "%s".', $method, $path);
-      return $this->toError($message, 'not_allowed', 405);
-    }
-
     $request = $this->getRequest()
       ->withMethod($method)
       ->withData($data);
+
+    // Set headers on the new request object.
+    foreach ($headers as $key => $value) {
+      $request = $request->withHeader($key, $value);
+    }
+
+    // If we are dealing with a json request, then a version must also be sent.
+    if (strpos($request->getHeaderLine('accept'), 'application/json') !== FALSE && !$request->getVersion()) {
+      return $this->toError(t('Missing required API version number.'), 'missing_version', 400);
+    }
+
+    $versioned_method = $this->getVersionedMethodFromResource($resource, $method, $request);
+
+    if (!$versioned_method) {
+      $message = sprintf('The method "%s" is not available for the resource "%s".', $method, $path);
+      return $this->toError($message, 'not_allowed', 405);
+    }
 
     // Sets the new path, if it is different.
     $uri = $request->getUri();
@@ -143,11 +155,6 @@ class Api {
     if ($path != $uri->getPath()) {
       $uri = $uri->withPath($path);
       $request = $request->withUri($uri);
-    }
-
-    // Set headers on the new request object.
-    foreach ($headers as $key => $value) {
-      $request = $request->withHeader($key, $value);
     }
 
     try {
@@ -158,9 +165,9 @@ class Api {
       $obj->before();
 
       $this->handleRequiredParameters($obj, $request);
-      $this->handleAccess($obj, $method, $args);
 
-      $response = call_user_func_array([$obj, $method], $args);
+      $this->handleAccess($obj, $resource, $method, $request, $args);
+      $response = call_user_func_array([$obj, $versioned_method], $args);
 
       if (!$response instanceof ResponseInterface) {
         $message = sprintf('%s::%s() must return an instance of ResponseInterface.', $resource->getClass(), $method);
@@ -253,8 +260,12 @@ class Api {
    *
    * @param ResourceInterface $resource
    *   The resource being called.
+   * @param ResourceConfiguration $resource_config
+   *   The resource configuration.
    * @param string $method
    *   The HTTP method of the request.
+   * @param JsonRequest $request
+   *   The request.
    * @param array $args
    *   An array of arguments derived from the URL.
    *
@@ -262,7 +273,7 @@ class Api {
    * @throws UnauthorizedException
    *
    */
-  protected function handleAccess(ResourceInterface $resource, $method, array $args = []) {
+  protected function handleAccess(ResourceInterface $resource, ResourceConfiguration $resource_config, $method, JsonRequest $request, array $args = []) {
 
     if (method_exists($resource, 'access')) {
       $result = call_user_func_array([$resource, 'access'], $args);
@@ -277,9 +288,10 @@ class Api {
       }
     }
 
-    $access = 'access' . ucfirst($method);
+    $method_name = 'access' . ucfirst($method);
+    $access = $this->getVersionedMethodFromResource($resource_config, $method_name, $request);
 
-    if (method_exists($resource, $access)) {
+    if ($access) {
       $result = call_user_func_array([$resource, $access], $args);
 
       if ($result === FALSE) {
@@ -350,4 +362,40 @@ class Api {
 
     return $response;
   }
+
+
+  /**
+   * Helper method to determine which method is available. The version will
+   * decrement/cascade down from the specified version all the way down to a
+   * non-versioned method.
+   *
+   * @param ResourceConfiguration $resource
+   *   The resource configuration.
+   * @param $method
+   *   The method name that we are trying to call.
+   * @param JsonRequest $request
+   *   The request being made.
+   *
+   * @return string|NULL
+   *   Returns the name of the method to call, if one can be found, or null if
+   *   no method exists that can satisfy the request.
+   *
+   */
+  protected function getVersionedMethodFromResource(ResourceConfiguration $resource, $method, JsonRequest $request) {
+
+    $current_version = variable_get('restapi_current_version', 1);
+    $version         = $current_version > $request->getVersion() ?
+      $request->getVersion() : $current_version;
+
+    for (; $version > 0; $version--) {
+      $method_name = $method . 'V' . $version;
+
+      if (method_exists($resource->getClass(), $method_name)) {
+        return $method_name;
+      }
+    }
+
+    return method_exists($resource->getClass(), $method) ? $method : NULL;
+  }
+
 }

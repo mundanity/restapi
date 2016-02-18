@@ -66,16 +66,12 @@ class JsonRequest extends ServerRequest {
    */
   public function getVersion() {
 
-    $version = 1;
-
     // We'll assume the first accept header to have a version is accurate.
-    preg_match('/application\/json;\s+version=(\d+)/i', $this->getHeaderLine('accept'), $matches);
+    preg_match('/application\/json[a-zA-Z ,*.\/]*;\s+version=(\d+)/i', $this->getHeaderLine('accept'), $matches);
 
-    if (isset($matches[1])) {
-      $version = $matches[1];
+    if (isset($matches[1]) && (int) $matches[1] > 0) {
+      return (int) $matches[1];
     }
-
-    return $version;
 
   }
 

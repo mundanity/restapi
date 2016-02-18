@@ -148,15 +148,15 @@ class JsonRequestTest extends PHPUnit_Framework_TestCase {
 
 
   /**
-   * Ensures that the default version is 1, if no suitable header is found.
+   * Ensures that there is no default version and null is returned.
    *
    */
-  public function testGetVersionSetsDefaultTo1() {
+  public function testGetVersionReturnsNullWhenEmpty() {
 
     $server['HTTP_ACCEPT'] = 'text/html';
 
     $request = ServerRequestFactory::fromGlobals($server);
-    $this->assertEquals(1, $request->getVersion());
+    $this->assertNull($request->getVersion());
   }
 
 
@@ -165,12 +165,12 @@ class JsonRequestTest extends PHPUnit_Framework_TestCase {
    * header is not used.
    *
    */
-  public function testGetVersionReturns1IfAcceptHeaderIsNotJson() {
+  public function testGetVersionIsNullIfAcceptHeaderIsNotJson() {
 
     $server['HTTP_ACCEPT'] = 'text/html; version=2';
 
     $request = ServerRequestFactory::fromGlobals($server);
-    $this->assertEquals(1, $request->getVersion());
+    $this->assertNull($request->getVersion());
   }
 
 
