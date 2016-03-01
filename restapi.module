@@ -532,6 +532,7 @@ function restapi_execute_resource($method, $path, array $data = [], array $heade
   $request = $request ?: restapi_get_request();
   $user    = $user ?: $GLOBALS['user'];
   $api     = new Api($user, $request);
+  $headers = $headers ?: ['Accept' => 'application/json; version=' . variable_get('restapi_current_version', 1)];
 
   return $api->call($method, $path, $data, $headers);
 
