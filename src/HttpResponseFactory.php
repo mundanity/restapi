@@ -83,7 +83,7 @@ class HttpResponseFactory {
   public function to403($message = NULL) {
 
     $message = $message ?: 'Permission denied';
-    return $this->toError($message, 'unauthenticated', 403);
+    return $this->toError($message, 'forbidden', 403);
   }
 
 

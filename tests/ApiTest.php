@@ -8,7 +8,7 @@ class ApiTest extends PHPUnit_Framework_TestCase {
 
   public function setUp() {
 
-    $this->request = $this->getMock('Drupal\restapi\JsonRequest');
+    $this->request = $this->createMock('Drupal\restapi\JsonRequest');
     $this->user = (object) [
       'uid' => 1,
       'name' => 'user',
@@ -30,7 +30,7 @@ class ApiTest extends PHPUnit_Framework_TestCase {
       'uid'  => 2,
       'name' => 'new user',
     ];
-    $request = $this->getMock('Drupal\restapi\JsonRequest');
+    $request = $this->createMock('Drupal\restapi\JsonRequest');
 
     $this->api->setUser($user);
     $this->api->setRequest($request);
