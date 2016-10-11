@@ -56,7 +56,7 @@ class ServerRequestFactory extends AbstractServerRequestFactory {
       $new  = [];
 
       if ($is_json) {
-        $new = json_decode($data, TRUE);
+        $new = (array) json_decode($data, TRUE);
       } else {
         parse_str($data, $new);
       }

@@ -40,10 +40,10 @@ class ServerRequestFactoryTest extends PHPUnit_Framework_TestCase {
 
   /**
    * Ensures that fromGlobals() results in JsonRequest::parsedBody() being set
-   * when given a JSON string as PHP input.
+   * correctly when given a non-scalar JSON string as PHP input.
    *
    */
-  public function testJsonStringIsSetAsParsedData() {
+  public function testNonScalarJsonStringIsSetAsParsedData() {
 
     $server = [
       'CONTENT_TYPE' => 'application/json',
@@ -54,6 +54,33 @@ class ServerRequestFactoryTest extends PHPUnit_Framework_TestCase {
     $expected = [
       'test' => 'testing',
     ];
+
+    $request = ServerRequestFactory::fromGlobals($server, null, null, null, null, $content);
+    $this->assertEquals($expected, $request->getParsedBody());
+  }
+
+
+  /**
+   * Ensures that fromGlobals() results in JsonRequest::parsedBoyd() being set
+   * correctly when given a scalar JSON string as PHP input.
+   *
+   */
+  public function testScalarJsonStringIsSetAsParsedData() {
+
+    $server = [
+      'CONTENT_TYPE' => 'application/json',
+      'REQUEST_METHOD' => 'POST',
+    ];
+
+    $content = new Stream('data://text/plain,null');
+    $expected = [];
+
+    $request = ServerRequestFactory::fromGlobals($server, null, null, null, null, $content);
+    $this->assertEquals($expected, $request->getParsedBody());
+
+
+    $content = new Stream('data://text/plain,"test"');
+    $expected = ['test'];
 
     $request = ServerRequestFactory::fromGlobals($server, null, null, null, null, $content);
     $this->assertEquals($expected, $request->getParsedBody());
