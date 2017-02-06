@@ -18,6 +18,11 @@ use Drupal\restapi\Exception\RestApiException;
  *   resources without this option defined will use the
  *   DrupalAuthenticationService. This class can be configured via the
  *   "restapi_default_auth_class" variable.
+ * - config: (optional) The class that will hold the custom configuration for
+ *   the resource. By default, resource configurations are handled by
+ *   ResourceConfiguration, but this allows any class that implements
+ *   ResourceConfigurationInterface to handle its own configuration and thus
+ *   resource invocation (via invokeResource method).
  *
  * @return array
  *
@@ -32,6 +37,10 @@ function hook_restapi_resources() {
   $items['custom/authed/resource'] = [
     'class' => 'Drupal\mymodule\OtherResource',
     'auth'  => 'Drupal\mymodule\CustomAuthenticationService',
+  ];
+  $items['custom/own_config/resource'] = [
+    'class' => 'Drupal\mymodule\OtherResource',
+    'config' => 'Drupal\mymodule\CustomConfiguration',
   ];
 
   return $items;

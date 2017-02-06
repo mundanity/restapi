@@ -17,20 +17,6 @@ use Psr\Http\Message\ServerRequestInterface;
 interface ResourceInterface {
 
   /**
-   * Constructor
-   *
-   * @param \StdClass $user
-   *   A Drupal user object.
-   * @param ServerRequestInterface $request
-   *   A HTTP request.
-   * @param HttpResponseFactory $http
-   *   A HTTP response factory.
-   *
-   */
-  public function __construct(\StdClass $user, ServerRequestInterface $request, HttpResponseFactory $http = NULL);
-
-
-  /**
    * Determines whether this resource can be accessed by the current user /
    * request.
    *
