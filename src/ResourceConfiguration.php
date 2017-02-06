@@ -4,7 +4,6 @@ namespace Drupal\restapi;
 
 use Drupal\restapi\Exception\ClassNotValidException;
 use Drupal\restapi\Exception\AuthClassNotValidException;
-use Drupal\restapi\Auth\AuthenticationServiceInterface;
 use Psr\Http\Message\RequestInterface;
 
 
@@ -16,7 +15,7 @@ use Psr\Http\Message\RequestInterface;
  * handler.
  *
  */
-class ResourceConfiguration {
+class ResourceConfiguration implements ResourceConfigurationInterface {
 
   /**
    * The raw path to the resource (e.g. items/%/thing).
@@ -103,14 +102,7 @@ class ResourceConfiguration {
 
 
   /**
-   * Factory method to instantiate the resource.
-   *
-   * @param \StdClass $user
-   *   A Drupal user object to access the resource as.
-   * @param RequestInterface $request
-   *   A HTTP request to set context for the resource.
-   *
-   * @return ResourceInterface
+   * {@inheritdoc}
    *
    */
   public function invokeResource(\StdClass $user, RequestInterface $request) {
@@ -120,14 +112,7 @@ class ResourceConfiguration {
 
 
   /**
-   * Factory method to instantiate the authentication service.
-   *
-   * @param \StdClass $user
-   *   A Drupal user object to access the resource as.
-   * @param RequestInterface $request
-   *   A HTTP request to set context for the authentication.
-   *
-   * @return AuthenticationServiceInterface
+   * {@inheritdoc}
    *
    */
   public function invokeAuthenticationService(\StdClass $user, RequestInterface $request) {
@@ -137,9 +122,7 @@ class ResourceConfiguration {
 
 
   /**
-   * Returns the raw path of this resource.
-   *
-   * @return string
+   * {@inheritdoc}
    *
    */
   public function getPath() {
@@ -148,9 +131,7 @@ class ResourceConfiguration {
 
 
   /**
-   * Returns the class name for this resource.
-   *
-   * @return string
+   * {@inheritdoc}
    *
    */
   public function getClass() {
@@ -159,9 +140,7 @@ class ResourceConfiguration {
 
 
   /**
-   * Returns the module that defined this resource.
-   *
-   * @return string
+   * {@inheritdoc}
    *
    */
   public function getModule() {
@@ -208,15 +187,7 @@ class ResourceConfiguration {
 
 
   /**
-   * Determines if this resource will be matched to the provided path.
-   *
-   * The resource will match either a raw path (e.g. "items/%/thing") or a real
-   * path (e.g. "items/123/thing".
-   *
-   * @param string $path
-   *   The path to attempt to match to this resource.
-   *
-   * @return boolean
+   * {@inheritdoc}
    *
    */
   public function matchesPath($path) {

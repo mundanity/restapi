@@ -6,6 +6,7 @@ use Drupal\restapi\JsonResponse;
 use Psr\Http\Message\ResponseInterface;
 use Drupal\restapi\ServerRequestFactory;
 use Drupal\restapi\ResourceConfiguration;
+use Drupal\restapi\ResourceConfigurationInterface;
 use Drupal\restapi\Exception\ClassNotValidException;
 use Drupal\restapi\Exception\AuthClassNotValidException;
 use Drupal\restapi\Exception\RestApiException;
@@ -94,14 +95,14 @@ function restapi_modules_disabled($modules) {
  *
  * @param string $path
  *   The current API path being requested.
- * @param ResourceConfiguration $resource
+ * @param ResourceConfigurationInterface $resource
  *   The resource configuration.
  * @param JsonRequest $request
  *   The HTTP request.
  *
  * @return JsonRequest|NULL
  */
-function restapi_restapi_request($path, ResourceConfiguration $resource, JsonRequest $request) {
+function restapi_restapi_request($path, ResourceConfigurationInterface $resource, JsonRequest $request) {
 
   if (variable_get('restapi_debug')) {
     timer_start('restapi-' . $path);
@@ -115,7 +116,7 @@ function restapi_restapi_request($path, ResourceConfiguration $resource, JsonReq
  *
  * @param string $path
  *   The current API path being requested.
- * @param ResourceConfiguration $resource
+ * @param ResourceConfigurationInterface $resource
  *   The resource configuration.
  * @param JsonRequest $request
  *   The HTTP request.
@@ -125,7 +126,7 @@ function restapi_restapi_request($path, ResourceConfiguration $resource, JsonReq
  * @return JsonResponse|NULL
  *
  */
-function restapi_restapi_response($path, ResourceConfiguration $resource, JsonRequest $request, ResponseInterface $response) {
+function restapi_restapi_response($path, ResourceConfigurationInterface $resource, JsonRequest $request, ResponseInterface $response) {
 
   if (variable_get('restapi_debug')) {
     $timer = timer_stop('restapi-' . $path);
@@ -218,13 +219,13 @@ function restapi_watchdog_alter(&$log_entry) {
 /**
  * Page callback to handle an API call from the Drupal menu system.
  *
- * @param ResourceConfiguration $resource
+ * @param ResourceConfigurationInterface $resource
  *   The resource that is being accessed, as defined in restapi_get_resources().
  *
  * @return JsonResponse
  *
  */
-function restapi_page_callback(ResourceConfiguration $resource) {
+function restapi_page_callback(ResourceConfigurationInterface $resource) {
 
   global $user;
 
@@ -400,7 +401,7 @@ function restapi_get_request() {
  * @param string $path
  *   The path for the resource to return.
  *
- * @return ResourceConfiguration
+ * @return ResourceConfigurationInterface
  *   Returns a ResourceConfiguration object, or FALSE If the resource does not
  *   exist.
  *
@@ -428,7 +429,7 @@ function restapi_get_resource($path) {
  *   Determines whether the cached copy (if it exists) of the resources should
  *   be ignored (default: FALSE).
  *
- * @return ResourceConfiguration[]
+ * @return ResourceConfigurationInterface[]
  *
  */
 function restapi_get_resources($refresh = FALSE) {
@@ -454,13 +455,15 @@ function restapi_get_resources($refresh = FALSE) {
     }
 
     foreach($resources as $path => $resource) {
+
       $class = isset($resource['class']) ? $resource['class'] : 'ClassNotDefined';
       $auth  = isset($resource['auth']) ? $resource['auth'] : $default_auth;
+      $conf_class = isset($resource['config']) ? $resource['config'] : ResourceConfiguration::class;
 
       // Ensure our resource definitions are valid, and skip registering them
       // if they are not.
       try {
-        $items[] = new ResourceConfiguration($path, $module, $class, $auth, $url_prefix);
+        $items[] = new $conf_class($path, $module, $class, $auth, $url_prefix);
       }
       catch (ClassNotValidException $e) {
         watchdog('restapi', 'The resource "@resource" in the module "@module" is not valid because the class "@class" does not exist.', [

@@ -260,7 +260,7 @@ class Api {
    *
    * @param ResourceInterface $resource
    *   The resource being called.
-   * @param ResourceConfiguration $resource_config
+   * @param ResourceConfigurationInterface $resource_config
    *   The resource configuration.
    * @param string $method
    *   The HTTP method of the request.
@@ -273,7 +273,7 @@ class Api {
    * @throws UnauthorizedException
    *
    */
-  protected function handleAccess(ResourceInterface $resource, ResourceConfiguration $resource_config, $method, JsonRequest $request, array $args = []) {
+  protected function handleAccess(ResourceInterface $resource, ResourceConfigurationInterface $resource_config, $method, JsonRequest $request, array $args = []) {
 
     if (method_exists($resource, 'access')) {
       $result = call_user_func_array([$resource, 'access'], $args);
@@ -311,7 +311,7 @@ class Api {
    *
    * @param string $path
    *   The path.
-   * @param ResourceConfiguration $resource
+   * @param ResourceConfigurationInterface $resource
    *   The resource configuration.
    * @param JsonRequest $request
    *   The HTTP request.
@@ -319,7 +319,7 @@ class Api {
    * @return JsonRequest
    *
    */
-  protected function invokeHookRequest($path, ResourceConfiguration $resource, JsonRequest $request) {
+  protected function invokeHookRequest($path, ResourceConfigurationInterface $resource, JsonRequest $request) {
 
     foreach(module_implements('restapi_request') as $module) {
       $func   = $module . '_restapi_request';
@@ -339,7 +339,7 @@ class Api {
    *
    * @param string $path
    *   The path.
-   * @param ResourceConfiguration $resource
+   * @param ResourceConfigurationInterface $resource
    *   The resource configuration.
    * @param JsonRequest $request
    *   The HTTP request.
@@ -349,7 +349,7 @@ class Api {
    * @return JsonResponse
    *
    */
-  protected function invokeHookResponse($path, ResourceConfiguration $resource, JsonRequest $request, ResponseInterface $response) {
+  protected function invokeHookResponse($path, ResourceConfigurationInterface $resource, JsonRequest $request, ResponseInterface $response) {
 
     foreach(module_implements('restapi_response') as $module) {
       $func   = $module . '_restapi_response';
@@ -369,7 +369,7 @@ class Api {
    * decrement/cascade down from the specified version all the way down to a
    * non-versioned method.
    *
-   * @param ResourceConfiguration $resource
+   * @param ResourceConfigurationInterface $resource
    *   The resource configuration.
    * @param $method
    *   The method name that we are trying to call.
@@ -381,7 +381,7 @@ class Api {
    *   no method exists that can satisfy the request.
    *
    */
-  protected function getVersionedMethodFromResource(ResourceConfiguration $resource, $method, JsonRequest $request) {
+  protected function getVersionedMethodFromResource(ResourceConfigurationInterface $resource, $method, JsonRequest $request) {
 
     $current_version = variable_get('restapi_current_version', 1);
     $version         = $current_version > $request->getVersion() ?
