@@ -115,7 +115,7 @@ class Api {
    * @param array $headers
    *   (optional) An array of headers to provide to the resource.
    *
-   * @return JsonResponse
+   * @return ResponseInterface
    *
    */
   public function call($method, $path, array $data = [], array $headers = []) {
@@ -142,7 +142,7 @@ class Api {
       return $this->toError(t('Missing required API version number.'), 'missing_version', 400);
     }
 
-    $versioned_method = $this->getVersionedMethodFromResource($resource, $method, $request);
+    $versioned_method = _restapi_get_versioned_method($resource, $request);
 
     if (!$versioned_method) {
       $message = sprintf('The method "%s" is not available for the resource "%s".', $method, $path);
@@ -289,7 +289,7 @@ class Api {
     }
 
     $method_name = 'access' . ucfirst($method);
-    $access = $this->getVersionedMethodFromResource($resource_config, $method_name, $request);
+    $access = _restapi_get_versioned_method($resource_config, $request, $method_name);
 
     if ($access) {
       $result = call_user_func_array([$resource, $access], $args);
@@ -362,40 +362,4 @@ class Api {
 
     return $response;
   }
-
-
-  /**
-   * Helper method to determine which method is available. The version will
-   * decrement/cascade down from the specified version all the way down to a
-   * non-versioned method.
-   *
-   * @param ResourceConfigurationInterface $resource
-   *   The resource configuration.
-   * @param $method
-   *   The method name that we are trying to call.
-   * @param JsonRequest $request
-   *   The request being made.
-   *
-   * @return string|NULL
-   *   Returns the name of the method to call, if one can be found, or null if
-   *   no method exists that can satisfy the request.
-   *
-   */
-  protected function getVersionedMethodFromResource(ResourceConfigurationInterface $resource, $method, JsonRequest $request) {
-
-    $current_version = variable_get('restapi_current_version', 1);
-    $version         = $current_version > $request->getVersion() ?
-      $request->getVersion() : $current_version;
-
-    for (; $version > 0; $version--) {
-      $method_name = $method . 'V' . $version;
-
-      if (method_exists($resource->getClass(), $method_name)) {
-        return $method_name;
-      }
-    }
-
-    return method_exists($resource->getClass(), $method) ? $method : NULL;
-  }
-
 }

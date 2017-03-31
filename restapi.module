@@ -123,15 +123,38 @@ function restapi_restapi_request($path, ResourceConfigurationInterface $resource
  * @param ResponseInterface $response
  *   The HTTP response.
  *
- * @return JsonResponse|NULL
+ * @return ResponseInterface|NULL
  *
  */
 function restapi_restapi_response($path, ResourceConfigurationInterface $resource, JsonRequest $request, ResponseInterface $response) {
 
-  if (variable_get('restapi_debug')) {
-    $timer = timer_stop('restapi-' . $path);
-    return $response->withHeader('X-Debug-Call-Time', $timer['time'] . 'ms');
+  $reflection  = new \ReflectionClass($resource->getClass());
+  $method      = _restapi_get_versioned_method($resource, $request);
+
+  $doc_comment = $reflection->hasMethod($method) ? $reflection->getMethod($method)->getDocComment() : '';
+  $deprecated  = preg_match('/\* @deprecated\h*[v]?([0-9]+\.[0-9]+)?\h*(.*)$/m', $doc_comment, $matches);
+
+  if ($deprecated) {
+    $api_name    = str_replace(' ', '-', variable_get('restapi_api_name', 'API'));
+    $dep_headers = ['yes'];
+
+    if (!empty($matches[1])) {
+      $dep_headers[] = 'version=' . preg_replace('/[^0-9.]/', '', $matches[1]);
+    }
+
+    if (!empty($matches[2])) {
+      $dep_headers[] = 'reason=' . $matches[2];
+    }
+
+    $response = $response->withHeader('X-' . $api_name . '-Deprecated', implode('; ', $dep_headers));
   }
+
+  if (variable_get('restapi_debug')) {
+    $timer    = timer_stop('restapi-' . $path);
+    $response = $response->withHeader('X-Debug-Call-Time', $timer['time'] . 'ms');
+  }
+
+  return $response;
 
 }
 
@@ -579,4 +602,40 @@ function restapi_invoke_hook_exception(Exception $e) {
   }
 
   return $response;
+}
+
+
+/**
+ * Helper function to determine which method is available. The version will
+ * decrement/cascade down from the specified version all the way down to a
+ * non-versioned method.
+ *
+ * @param ResourceConfigurationInterface $resource
+ *   The resource configuration.
+ * @param JsonRequest $request
+ *   The request being made.
+ * @param string $method_override
+ *   The method name that we are trying to call.
+ *
+ * @return string|NULL
+ *   Returns the name of the method to call, if one can be found, or null if
+ *   no method exists that can satisfy the request.
+ *
+ */
+function _restapi_get_versioned_method(ResourceConfigurationInterface $resource, JsonRequest $request, $method_override = NULL) {
+
+  $method          = $method_override ?: $request->getMethod();
+  $current_version = (int) variable_get('restapi_current_version', 1);
+  $version         = $current_version > $request->getVersion() ?
+    $request->getVersion() : $current_version;
+
+  for (; $version > 0; $version--) {
+    $method_name = $method . 'V' . $version;
+
+    if (method_exists($resource->getClass(), $method_name)) {
+      return $method_name;
+    }
+  }
+
+  return method_exists($resource->getClass(), $method) ? $method : NULL;
 }
