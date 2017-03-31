@@ -139,7 +139,7 @@ function restapi_restapi_response($path, ResourceConfigurationInterface $resourc
     $dep_headers = ['yes'];
 
     if (!empty($matches[1])) {
-      $dep_headers[] = 'version=' . preg_replace('/[^0-9,.]/', '', $matches[1]);
+      $dep_headers[] = 'version=' . preg_replace('/[^0-9.]/', '', $matches[1]);
     }
 
     if (!empty($matches[2])) {
