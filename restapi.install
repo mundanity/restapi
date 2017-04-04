@@ -5,7 +5,10 @@
  *
  */
 function restapi_uninstall() {
+  variable_del('restapi_api_name');
+  variable_del('restapi_current_version');
   variable_del('restapi_default_auth_class');
   variable_del('restapi_debug');
+  variable_del('restapi_minimum_version');
   variable_del('restapi_url_prefix');
 }

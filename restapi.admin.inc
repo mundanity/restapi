@@ -10,9 +10,35 @@ function restapi_admin_form($form, &$form_state) {
   $form['restapi_url_prefix'] = [
     '#type'          => 'textfield',
     '#title'         => t('URL prefix'),
-    '#size'          => 10,
-    '#description'   => 'Prepend this value to all URLs defined in hook_restapi_resource(). (e.g. A resource with the URL "some/resource" will  become "$prefix/some/resource").',
+    '#size'          => 15,
+    '#description'   => t('Prepend this value to all URLs defined in hook_restapi_resource(). (e.g. A resource with the URL "some/resource" will  become "$prefix/some/resource").'),
     '#default_value' => variable_get('restapi_url_prefix'),
+  ];
+
+  $form['restapi_api_name'] = [
+    '#type'          => 'textfield',
+    '#title'         => t('API name'),
+    '#size'          => 15,
+    '#description'   => t('Used in the header that specifies the API version. (e.g. An API with the name "API-Name" will add the header "X-API-Name-Version").'),
+    '#default_value' => variable_get('restapi_api_name', 'API'),
+  ];
+
+  $form['restapi_current_version'] = [
+    '#type'             => 'textfield',
+    '#title'            => t('Current API version'),
+    '#size'             => 15,
+    '#description'      => t('Specifies the current API version, which is used by default if a version is not provided. This should also be the most recent API version.)'),
+    '#default_value'    => variable_get('restapi_current_version', 1),
+    '#element_validate' => ['element_validate_integer_positive'],
+  ];
+
+  $form['restapi_minimum_version'] = [
+    '#type'             => 'textfield',
+    '#title'            => t('Minimum API version'),
+    '#size'             => 15,
+    '#description'      => t('Specifies the minimum API version that clients may request.)'),
+    '#default_value'    => variable_get('restapi_minimum_version', 0),
+    '#element_validate' => ['element_validate_integer_positive'],
   ];
 
   $form['restapi_default_auth_class'] = [

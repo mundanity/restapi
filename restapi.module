@@ -104,6 +104,26 @@ function restapi_modules_disabled($modules) {
  */
 function restapi_restapi_request($path, ResourceConfigurationInterface $resource, JsonRequest $request) {
 
+  $current_version = (int) variable_get('restapi_current_version', 1);
+  $minimum_version = (int) variable_get('restapi_minimum_version', 0);
+
+  if ($request->getVersion()) {
+    if ($request->getVersion() > $current_version) {
+      $message = t('You requested version @requested of the API, but the latest supported version is @supported.', [
+        '@requested' => $request->getVersion(),
+        '@supported' => $current_version,
+      ]);
+      throw new RestApiException($message, 400, NULL, 'invalid version');
+    }
+    if ($request->getVersion() < $minimum_version) {
+      $message = t('You requested version @requested of the API, but the earliest supported version is @supported.', [
+        '@requested' => $request->getVersion(),
+        '@supported' => $minimum_version,
+      ]);
+      throw new RestApiException($message, 400, NULL, 'invalid version');
+    }
+  }
+
   if (variable_get('restapi_debug')) {
     timer_start('restapi-' . $path);
   }
@@ -338,7 +358,19 @@ function restapi_delivery_callback($response) {
     ], 503);
   }
 
+  $current_version = (int) variable_get('restapi_current_version', 1);
+  if ($request->getVersion()) {
+    $version = $current_version > $request->getVersion() ? $request->getVersion() : $current_version;
+  }
+  else {
+    $version = $current_version;
+  }
+
+  $version_name = str_replace(' ', '-', variable_get('restapi_api_name', 'API'));
+  $version_header_name = 'X-' . $version_name . '-Version';
+
   $response = $response->withHeader('X-Request-Id', $request->getRequestId());
+  $response = $response->withHeader($version_header_name, (string) $version);
 
   // For requests in the browser, we'll try to show the output in a more
   // pleasant way.
@@ -617,6 +649,8 @@ function restapi_invoke_hook_exception(Exception $e) {
  * @param string $method_override
  *   The method name that we are trying to call.
  *
+ * @throws RestApiException
+ *
  * @return string|NULL
  *   Returns the name of the method to call, if one can be found, or null if
  *   no method exists that can satisfy the request.
@@ -626,8 +660,12 @@ function _restapi_get_versioned_method(ResourceConfigurationInterface $resource,
 
   $method          = $method_override ?: $request->getMethod();
   $current_version = (int) variable_get('restapi_current_version', 1);
-  $version         = $current_version > $request->getVersion() ?
-    $request->getVersion() : $current_version;
+  if ($request->getVersion()) {
+    $version = $current_version > $request->getVersion() ? $request->getVersion() : $current_version;
+  }
+  else {
+    $version = $current_version;
+  }
 
   for (; $version > 0; $version--) {
     $method_name = $method . 'V' . $version;
