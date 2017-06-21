@@ -194,7 +194,7 @@ function restapi_restapi_exception(Exception $e, ResponseInterface $response = N
 
   if ($e instanceof RestApiException) {
     $data = [
-      'code'    => (string) $e,
+      'error'   => (string) $e,
       'message' => $e->getMessage(),
     ];
     $response = JsonResponse::create($data, $e->getCode());
