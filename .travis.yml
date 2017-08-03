@@ -1,3 +1,5 @@
+dist: trusty
+
 language: php
 
 php:
@@ -8,4 +10,4 @@ before_script:
   - travis_retry composer install --no-interaction
 
 script:
-  - phpunit --coverage-text --coverage-clover=coverage.clover
+  - ./vendor/bin/phpunit --coverage-text --coverage-clover=coverage.clover
