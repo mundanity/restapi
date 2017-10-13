@@ -3,6 +3,7 @@
 use Drupal\restapi\Api;
 use Drupal\restapi\JsonRequest;
 use Drupal\restapi\JsonResponse;
+use Negotiation\Negotiator;
 use Psr\Http\Message\ResponseInterface;
 use Drupal\restapi\ServerRequestFactory;
 use Drupal\restapi\ResourceConfiguration;
@@ -221,9 +222,10 @@ function restapi_restapi_exception(Exception $e, ResponseInterface $response = N
  */
 function restapi_theme_registry_alter(&$theme) {
 
-  $request = restapi_get_request();
+  $request    = restapi_get_request();
+  $negotiator = new Negotiator();
 
-  if ($request->isJson()) {
+  if ($negotiator->getBest($request->getHeaderLine('Accept'), ['application/json'])) {
     $file = 'restapi.theme.inc';
     $path = drupal_get_path('module', 'restapi');
 
@@ -272,8 +274,9 @@ function restapi_page_callback(ResourceConfigurationInterface $resource) {
 
   global $user;
 
-  $request = restapi_get_request();
-  $auth    = $resource->invokeAuthenticationService($user, $request);
+  $request    = restapi_get_request();
+  $negotiator = new Negotiator();
+  $auth       = $resource->invokeAuthenticationService($user, $request);
 
   try {
     $account = $auth->authenticate();
@@ -286,7 +289,7 @@ function restapi_page_callback(ResourceConfigurationInterface $resource) {
     return MENU_ACCESS_DENIED;
   }
 
-  $api = new Api($account, $request);
+  $api = new Api($account, $negotiator, $request);
 
   return $api->call($request->getMethod(), current_path());
 }
@@ -374,10 +377,13 @@ function restapi_delivery_callback($response) {
 
   // For requests in the browser, we'll try to show the output in a more
   // pleasant way.
-  if (!$request->isJson() &&
-      strpos($response->getHeaderLine('content-type'), 'application/json') !== FALSE &&
-      strpos($request->getHeaderLine('Accept'), 'text/html') !== FALSE) {
-    return restapi_deliver_html($response);
+  $negotiator = new Negotiator();
+  $accept     = $request->getHeaderLine('Accept');
+  $priorities = ['application/json', 'text/html'];
+
+  if ($negotiator->getBest($accept, $priorities) === 'text/html') {
+    restapi_deliver_html($response);
+    return;
   }
 
   (new SapiEmitter())->emit($response);
