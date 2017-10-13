@@ -27,6 +27,17 @@ class ResourceConfiguration implements ResourceConfigurationInterface {
 
 
   /**
+   * An array of mimetypes that must be versioned for this resource.
+   *
+   * @var array
+   *
+   */
+  protected $versioned_types = [
+    'application/json',
+  ];
+
+
+  /**
    * The Drupal module that defined this resource.
    *
    * @var string
@@ -127,6 +138,15 @@ class ResourceConfiguration implements ResourceConfigurationInterface {
    */
   public function getPath() {
     return $this->path;
+  }
+
+
+  /**
+   * {@inheritdoc}
+   *
+   */
+  public function getVersionedTypes() {
+    return $this->versioned_types;
   }
 
 

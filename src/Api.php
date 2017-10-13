@@ -137,9 +137,13 @@ class Api {
       $request = $request->withHeader($key, $value);
     }
 
-    // If we are dealing with a json request, then a version must also be sent.
-    if (strpos($request->getHeaderLine('accept'), 'application/json') !== FALSE && !$request->getVersion()) {
-      return $this->toError(t('Missing required API version number.'), 'missing_version', 400);
+    // Check to see if this request requires a version.
+    foreach ($resource->getVersionedTypes() as $type) {
+
+      if (strpos($request->getHeaderLine('accept'), $type) !== FALSE && !$request->getVersion()) {
+        return $this->toError(t('Missing required API version number.'), 'missing_version', 400);
+      }
+
     }
 
     $versioned_method = _restapi_get_versioned_method($resource, $request);
