@@ -45,6 +45,15 @@ interface ResourceConfigurationInterface {
 
 
   /**
+   * Returns an array of mimetypes that require versioning for this resource.
+   *
+   * @return array
+   *
+   */
+  public function getVersionedTypes();
+
+
+  /**
    * Factory method to instantiate the authentication service.
    *
    * @param stdClass $user
