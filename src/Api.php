@@ -151,9 +151,11 @@ class Api {
     }
 
     // Check to see if this request requires a version.
-    $accept_header   = $request->getHeaderLine('Accept');
-    $versioned_types = $resource->getVersionedTypes();
-    if ($accept_header && $versioned_types && $this->negotiator->getBest($accept_header, $versioned_types) && !$request->getVersion()) {
+    $accept_header    = $request->getHeaderLine('Accept');
+    $versioned_types  = $resource->getVersionedTypes();
+    $should_negotiate = $accept_header && $versioned_types && !$request->getVersion();
+
+    if ($should_negotiate && $this->negotiator->getBest($accept_header, $versioned_types)) {
       return $this->toError(t('Missing required API version number.'), 'missing_version', 400);
     }
 
