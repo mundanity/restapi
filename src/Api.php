@@ -7,6 +7,7 @@ use Drupal\restapi\Exception\MissingParametersException;
 use Drupal\restapi\Exception\RestApiException;
 use Drupal\restapi\Exception\UnauthorizedException;
 use Exception;
+use Negotiation\Negotiator;
 use Psr\Http\Message\ResponseInterface;
 
 
@@ -34,23 +35,35 @@ class Api {
 
 
   /**
+   * The content type negotiator.
+   *
+   * @var Negotiator
+   *
+   */
+  protected  $negotiator;
+
+
+  /**
    * Constructor
    *
    * @param \StdClass $user
    *   The Drupal user to call this resource as. Defaults to the current user.
+   * @param Negotiator $negotiator
+   *   The content type negotiator.
    * @param JsonRequest $request
    *   The request to use to set the context for the resource. Defaults to the
    *   current page request.
    *
    */
-  public function __construct(\StdClass $user = NULL, JsonRequest $request = NULL) {
+  public function __construct(\StdClass $user = NULL, Negotiator $negotiator, JsonRequest $request = NULL) {
 
     if (!$request) {
       $request = ServerRequestFactory::fromGlobals();
     }
 
-    $this->request = $request;
-    $this->user = $user ?: $GLOBALS['user'];
+    $this->negotiator = $negotiator;
+    $this->request    = $request;
+    $this->user       = $user ?: $GLOBALS['user'];
   }
 
 
@@ -138,13 +151,14 @@ class Api {
     }
 
     // Check to see if this request requires a version.
-    foreach ($resource->getVersionedTypes() as $type) {
+    $accept_header    = $request->getHeaderLine('Accept');
+    $versioned_types  = $resource->getVersionedTypes();
+    $should_negotiate = $accept_header && $versioned_types && !$request->getVersion();
 
-      if (strpos($request->getHeaderLine('accept'), $type) !== FALSE && !$request->getVersion()) {
-        return $this->toError(t('Missing required API version number.'), 'missing_version', 400);
-      }
-
+    if ($should_negotiate && $this->negotiator->getBest($accept_header, $versioned_types)) {
+      return $this->toError(t('Missing required API version number.'), 'missing_version', 400);
     }
+
 
     $versioned_method = _restapi_get_versioned_method($resource, $request);
 
