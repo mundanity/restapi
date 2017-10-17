@@ -224,8 +224,9 @@ function restapi_theme_registry_alter(&$theme) {
 
   $request    = restapi_get_request();
   $negotiator = new Negotiator();
+  $accept     = $request->getHeaderLine('Accept');
 
-  if ($negotiator->getBest($request->getHeaderLine('Accept'), ['application/json'])) {
+  if ($accept && $negotiator->getBest($accept, ['application/json'])) {
     $file = 'restapi.theme.inc';
     $path = drupal_get_path('module', 'restapi');
 
@@ -381,7 +382,7 @@ function restapi_delivery_callback($response) {
   $accept     = $request->getHeaderLine('Accept');
   $priorities = ['application/json', 'text/html'];
 
-  if ($negotiator->getBest($accept, $priorities) === 'text/html') {
+  if ($accept && $negotiator->getBest($accept, $priorities) === 'text/html') {
     restapi_deliver_html($response);
     return;
   }
