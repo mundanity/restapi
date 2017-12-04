@@ -73,8 +73,7 @@ class JsonRequest extends ServerRequest {
       return (int) $matches[1];
     }
 
-    // Fall back to the current version if the version isn't present in the Accept header.
-    return variable_get('restapi_current_version', 1);
+    return 1;
   }
 
 
