@@ -8,14 +8,13 @@ class ApiTest extends PHPUnit_Framework_TestCase {
 
   public function setUp() {
 
-    $this->negotiator = $this->createMock('Negotiation\Negotiator');
     $this->request = $this->createMock('Drupal\restapi\JsonRequest');
     $this->user = (object) [
       'uid' => 1,
       'name' => 'user',
     ];
 
-    $this->api = new Api($this->user, $this->negotiator, $this->request);
+    $this->api = new Api($this->user, $this->request);
   }
 
 

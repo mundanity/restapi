@@ -275,9 +275,8 @@ function restapi_page_callback(ResourceConfigurationInterface $resource) {
 
   global $user;
 
-  $request    = restapi_get_request();
-  $negotiator = new Negotiator();
-  $auth       = $resource->invokeAuthenticationService($user, $request);
+  $request = restapi_get_request();
+  $auth    = $resource->invokeAuthenticationService($user, $request);
 
   try {
     $account = $auth->authenticate();
@@ -290,7 +289,7 @@ function restapi_page_callback(ResourceConfigurationInterface $resource) {
     return MENU_ACCESS_DENIED;
   }
 
-  $api = new Api($account, $negotiator, $request);
+  $api = new Api($account, $request);
 
   return $api->call($request->getMethod(), current_path());
 }
@@ -593,7 +592,6 @@ function restapi_execute_resource($method, $path, array $data = [], array $heade
 
   $path  = ltrim(trim($path), '/');
   $prefix = restapi_get_url_prefix();
-  $negotiator = new Negotiator();
 
   // If a URL prefix is set, and not included in the path, add it.
   if ($prefix && strpos($prefix, $path) !== 0) {
@@ -602,7 +600,7 @@ function restapi_execute_resource($method, $path, array $data = [], array $heade
 
   $request = $request ?: restapi_get_request();
   $user    = $user ?: $GLOBALS['user'];
-  $api     = new Api($user, $negotiator, $request);
+  $api     = new Api($user, $request);
   $headers = $headers ?: ['Accept' => 'application/json; version=' . variable_get('restapi_current_version', 1)];
 
   return $api->call($method, $path, $data, $headers);
@@ -677,6 +675,7 @@ function _restapi_get_versioned_method(ResourceConfigurationInterface $resource,
     $version = $current_version > $request->getVersion() ? $request->getVersion() : $current_version;
   }
   else {
+    watchdog('restapi', 'Accept header does not include a requested version, falling back to current version.', WATCHDOG_INFO);
     $version = $current_version;
   }
 

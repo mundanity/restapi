@@ -60,20 +60,18 @@ class JsonRequest extends ServerRequest {
   /**
    * Returns the API version.
    *
-   * @return int $version
-   *   The version number of the API (default: 1).
+   * @return int|NULL $version
+   *   The requested version number of the API, or NULL if it can't be determined.
    *
    */
   public function getVersion() {
 
     // We'll assume the first accept header to have a version is accurate.
-    preg_match('/application\/json[a-zA-Z ,*.\/]*;\s+version=(\d+)/i', $this->getHeaderLine('accept'), $matches);
+    preg_match('/\s*version=(\d+)?/', $this->getHeaderLine('accept'), $matches);
 
     if (isset($matches[1]) && (int) $matches[1] > 0) {
       return (int) $matches[1];
     }
-
-    return 1;
   }
 
 
