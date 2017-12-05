@@ -592,7 +592,6 @@ function restapi_execute_resource($method, $path, array $data = [], array $heade
 
   $path  = ltrim(trim($path), '/');
   $prefix = restapi_get_url_prefix();
-  $negotiator = new Negotiator();
 
   // If a URL prefix is set, and not included in the path, add it.
   if ($prefix && strpos($prefix, $path) !== 0) {
@@ -601,7 +600,7 @@ function restapi_execute_resource($method, $path, array $data = [], array $heade
 
   $request = $request ?: restapi_get_request();
   $user    = $user ?: $GLOBALS['user'];
-  $api     = new Api($user, $negotiator, $request);
+  $api     = new Api($user, $request);
   $headers = $headers ?: ['Accept' => 'application/json; version=' . variable_get('restapi_current_version', 1)];
 
   return $api->call($method, $path, $data, $headers);
