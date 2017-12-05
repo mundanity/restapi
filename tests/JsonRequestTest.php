@@ -161,20 +161,6 @@ class JsonRequestTest extends PHPUnit_Framework_TestCase {
 
 
   /**
-   * Ensures that a version not associated with an application/json accept
-   * header is not used.
-   *
-   */
-  public function testGetVersionIsNullIfAcceptHeaderIsNotJson() {
-
-    $server['HTTP_ACCEPT'] = 'text/html; version=2';
-
-    $request = ServerRequestFactory::fromGlobals($server);
-    $this->assertNull($request->getVersion());
-  }
-
-
-  /**
    * Ensures that isJson() works as expected.
    *
    */
