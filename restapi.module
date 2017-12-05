@@ -675,7 +675,7 @@ function _restapi_get_versioned_method(ResourceConfigurationInterface $resource,
     $version = $current_version > $request->getVersion() ? $request->getVersion() : $current_version;
   }
   else {
-    watchdog('restapi', 'Accept header does not include a requested version, falling back to current version.', WATCHDOG_INFO);
+    watchdog('restapi', 'Accept header does not include a requested version, falling back to current version.', [], WATCHDOG_INFO);
     $version = $current_version;
   }
 
