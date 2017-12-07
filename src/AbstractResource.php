@@ -94,22 +94,7 @@ abstract class AbstractResource implements ResourceInterface {
    *
    */
   public function options() {
-
-    $possible_methods = ['DELETE', 'GET', 'POST', 'PUT', 'OPTIONS'];
-    $request          = $this->getRequest();
-    $path             = $request->getUri()->getPath();
-    $resource         = restapi_get_resource($path);
-
-    // Check to see if there's a versioned class method for each possible HTTP verb
-    $allowed_methods = array_filter($possible_methods, function ($method) use ($request, $resource) {
-      return _restapi_get_versioned_method($resource, $request->withMethod($method));
-    });
-
-    $headers['Allow'] = implode(', ', $allowed_methods);
-
-    // @todo add support for CORS preflight headers
-
-    return new EmptyResponse(200, $headers);
+    return new EmptyResponse(200);
   }
 
 
