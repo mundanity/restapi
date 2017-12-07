@@ -152,6 +152,7 @@ function restapi_restapi_response($path, ResourceConfigurationInterface $resourc
   $reflection  = new \ReflectionClass($resource->getClass());
   $method      = _restapi_get_versioned_method($resource, $request);
 
+  // Add deprecation headers.
   $doc_comment = $reflection->hasMethod($method) ? $reflection->getMethod($method)->getDocComment() : '';
   $deprecated  = preg_match('/\* @deprecated\h*[v]?([0-9]+\.[0-9]+)?\h*(.*)$/m', $doc_comment, $matches);
 
@@ -170,13 +171,22 @@ function restapi_restapi_response($path, ResourceConfigurationInterface $resourc
     $response = $response->withHeader('X-' . $api_name . '-Deprecated', implode('; ', $dep_headers));
   }
 
+  // Add debug headers.
   if (variable_get('restapi_debug')) {
     $timer    = timer_stop('restapi-' . $path);
     $response = $response->withHeader('X-Debug-Call-Time', $timer['time'] . 'ms');
   }
 
-  return $response;
+  // Add Allow header by checking to see if there's a versioned class method for
+  // each possible HTTP verb.
+  $possible_methods = ['DELETE', 'GET', 'POST', 'PUT', 'OPTIONS'];
+  $allowed_methods = array_filter($possible_methods, function ($method) use ($request, $resource) {
+    return _restapi_get_versioned_method($resource, $request->withMethod($method));
+  });
 
+  $response = $response->withHeader('Allow', implode(', ', $allowed_methods));
+
+  return $response;
 }
 
 
