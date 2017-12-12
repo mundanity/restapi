@@ -228,15 +228,15 @@ class ResourceConfiguration implements ResourceConfigurationInterface {
     }
 
     $doc_comment = $class->getMethod($method)->getDocComment();
-    $deprecated  = preg_match('/\* @deprecated(?:\h+(?:[vV]?([0-9]+))?)?(?:\h+(.*)?)/m', $doc_comment, $matches);
+    $deprecated  = preg_match('/\* @deprecated(?:\h+(?:[vV]?([0-9]+))?)?(?:\h+(.*)?)?$/m', $doc_comment, $matches);
 
     if (!$deprecated) {
       return NULL;
     }
 
     return [
-      'version' => $matches[1],
-      'reason'  => $matches[2],
+      'version' => isset($matches[1]) ? $matches[1] : NULL,
+      'reason'  => isset($matches[2]) ? $matches[2] : NULL,
     ];
   }
 
@@ -254,7 +254,7 @@ class ResourceConfiguration implements ResourceConfigurationInterface {
     }
 
     $doc_comment = $class->getMethod($method)->getDocComment();
-    $stability   = preg_match('/\* @stability\h+(.*)/\m', $doc_comment, $matches);
+    $stability   = preg_match('/\* @stability\h+(.*)/m', $doc_comment, $matches);
 
     return $stability ? $matches[1] : 'production';
   }
