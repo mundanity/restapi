@@ -5,7 +5,6 @@ namespace Drupal\restapi;
 use Drupal\restapi\Exception\ClassNotValidException;
 use Drupal\restapi\Exception\AuthClassNotValidException;
 use Drupal\restapi\Exception\MethodNotValidException;
-use Drupal\restapi\Exception\NotFoundException;
 use Psr\Http\Message\RequestInterface;
 use ReflectionClass;
 
