@@ -149,27 +149,23 @@ function restapi_restapi_request($path, ResourceConfigurationInterface $resource
  */
 function restapi_restapi_response($path, ResourceConfigurationInterface $resource, JsonRequest $request, ResponseInterface $response) {
 
-  $reflection  = new \ReflectionClass($resource->getClass());
-  $method      = _restapi_get_versioned_method($resource, $request);
+  $api_name = str_replace(' ', '-', variable_get('restapi_api_name', 'API'));
+  $method   = _restapi_get_versioned_method($resource, $request);
 
-  // Add deprecation headers.
-  $doc_comment = $reflection->hasMethod($method) ? $reflection->getMethod($method)->getDocComment() : '';
-  $deprecated  = preg_match('/\* @deprecated\h*[v]?([0-9]+\.[0-9]+)?\h*(.*)$/m', $doc_comment, $matches);
+  if ($deprecation = $resource->getDeprecationForMethod($method)) {
 
-  if ($deprecated) {
-    $api_name    = str_replace(' ', '-', variable_get('restapi_api_name', 'API'));
-    $dep_headers = ['yes'];
+    $dep_parts = ['yes'];
+    $dep_parts[] = 'version=' . ($deprecation['version'] ?: variable_get('restapi_current_version', 1));
 
-    if (!empty($matches[1])) {
-      $dep_headers[] = 'version=' . preg_replace('/[^0-9.]/', '', $matches[1]);
+    if ($deprecation['reason']) {
+      $dep_parts[] = 'reason=' . $deprecation['reason'];
     }
 
-    if (!empty($matches[2])) {
-      $dep_headers[] = 'reason=' . $matches[2];
-    }
-
-    $response = $response->withHeader('X-' . $api_name . '-Deprecated', implode('; ', $dep_headers));
+    $response = $response->withHeader('X-' . $api_name . '-Deprecated', implode('; ', $dep_parts));
   }
+
+  $stability = $resource->getStabilityForMethod($method);
+  $response  = $response->withHeader('X-' . $api_name . '-Stability', $stability);
 
   // Add debug headers.
   if (variable_get('restapi_debug')) {

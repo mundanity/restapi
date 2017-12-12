@@ -5,6 +5,7 @@ namespace Drupal\restapi;
 use Drupal\restapi\Exception\ClassNotValidException;
 use Drupal\restapi\Exception\AuthClassNotValidException;
 use Psr\Http\Message\RequestInterface;
+use ReflectionClass;
 
 
 /**
@@ -212,6 +213,50 @@ class ResourceConfiguration implements ResourceConfigurationInterface {
    */
   public function matchesPath($path) {
     return ($this->getPath() == $path || preg_match($this->getMaskedPath(), $path));
+  }
+
+
+  /**
+   * {@inheritdoc}
+   *
+   */
+  public function getDeprecationForMethod($method) {
+    $class = new ReflectionClass($this->getClass());
+
+    if (!$class->hasMethod($method)) {
+      return NULL;
+    }
+
+    $doc_comment = $class->getMethod($method)->getDocComment();
+    $deprecated  = preg_match('/\* @deprecated(?:\h+(?:[vV]?([0-9]+))?)?(?:\h+(.*)?)/m', $doc_comment, $matches);
+
+    if (!$deprecated) {
+      return NULL;
+    }
+
+    return [
+      'version' => $matches[1],
+      'reason'  => $matches[2],
+    ];
+  }
+
+
+  /**
+   * {@inheritdoc}
+   *
+   */
+  public function getStabilityForMethod($method) {
+
+    $class = new ReflectionClass($this->getClass());
+
+    if (!$class->hasMethod($method)) {
+      return NULL;
+    }
+
+    $doc_comment = $class->getMethod($method)->getDocComment();
+    $stability   = preg_match('/\* @stability\h+(.*)/\m', $doc_comment, $matches);
+
+    return $stability ? $matches[1] : 'production';
   }
 
 
