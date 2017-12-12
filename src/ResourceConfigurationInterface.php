@@ -3,6 +3,7 @@
 namespace Drupal\restapi;
 
 use Drupal\restapi\Auth\AuthenticationServiceInterface;
+use Drupal\restapi\Exception\MethodNotValidException;
 use Psr\Http\Message\RequestInterface;
 use stdClass;
 
@@ -112,9 +113,12 @@ interface ResourceConfigurationInterface {
    * @param string $method
    *   The request method to check.
    *
+   * @throws MethodNotValidException
+   *   When the specified method does not exist on the resource.
+   *
    * @return array|NULL
    *   An associative array containing deprecation information if the
-   *   endpoint is deprecated, NULL otherwise. Possible values are:
+   *   endpoint is deprecated, and NULL otherwise. Possible values are:
    *     - version: the version the endpoint has been deprecated since
    *     - reason: the reason the endpoint has been deprecated
    *
@@ -136,6 +140,9 @@ interface ResourceConfigurationInterface {
    *
    * @param string $method
    *   The request method to check.
+   *
+   * @throws MethodNotValidException
+   *   When the specified method does not exist on the resource.
    *
    * @return string
    *   The stability of the endpoint.

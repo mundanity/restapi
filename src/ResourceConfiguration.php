@@ -4,6 +4,8 @@ namespace Drupal\restapi;
 
 use Drupal\restapi\Exception\ClassNotValidException;
 use Drupal\restapi\Exception\AuthClassNotValidException;
+use Drupal\restapi\Exception\MethodNotValidException;
+use Drupal\restapi\Exception\NotFoundException;
 use Psr\Http\Message\RequestInterface;
 use ReflectionClass;
 
@@ -224,7 +226,8 @@ class ResourceConfiguration implements ResourceConfigurationInterface {
     $class = new ReflectionClass($this->getClass());
 
     if (!$class->hasMethod($method)) {
-      return NULL;
+      $message = sprintf('The %s method does not exist for the class %s', $method, $class);
+      throw new MethodNotValidException($message);
     }
 
     $doc_comment = $class->getMethod($method)->getDocComment();
@@ -250,7 +253,8 @@ class ResourceConfiguration implements ResourceConfigurationInterface {
     $class = new ReflectionClass($this->getClass());
 
     if (!$class->hasMethod($method)) {
-      return NULL;
+      $message = sprintf('The %s method does not exist for the class %s', $method, $class);
+      throw new MethodNotValidException($message);
     }
 
     $doc_comment = $class->getMethod($method)->getDocComment();
