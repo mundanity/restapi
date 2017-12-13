@@ -3,7 +3,7 @@
 namespace Drupal\restapi;
 
 use Drupal\restapi\Auth\AuthenticationServiceInterface;
-use Drupal\restapi\Exception\MethodNotValidException;
+use Drupal\restapi\Exception\ClassMethodNotValidException;
 use Psr\Http\Message\RequestInterface;
 use stdClass;
 
@@ -113,7 +113,7 @@ interface ResourceConfigurationInterface {
    * @param string $method
    *   The request method to check.
    *
-   * @throws MethodNotValidException
+   * @throws ClassMethodNotValidException
    *   When the specified method does not exist on the resource.
    *
    * @return array|NULL
@@ -141,7 +141,7 @@ interface ResourceConfigurationInterface {
    * @param string $method
    *   The request method to check.
    *
-   * @throws MethodNotValidException
+   * @throws ClassMethodNotValidException
    *   When the specified method does not exist on the resource.
    *
    * @return string

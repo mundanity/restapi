@@ -135,7 +135,7 @@ class ResourceConfigurationTest extends PHPUnit_Framework_TestCase {
   /**
    * Ensures getDeprecationForMethod() throws an exception if the method does not exist.
    *
-   * @expectedException \Drupal\restapi\Exception\MethodNotValidException
+   * @expectedException \Drupal\restapi\Exception\ClassMethodNotValidException
    *
    */
   public function testGetDeprecationForMethodThrowsExceptionForInvalidMethod() {
@@ -163,7 +163,7 @@ class ResourceConfigurationTest extends PHPUnit_Framework_TestCase {
   /**
    * Ensures getStabilityForMethod() throws an exception if the method does not exist.
    *
-   * @expectedException \Drupal\restapi\Exception\MethodNotValidException
+   * @expectedException \Drupal\restapi\Exception\ClassMethodNotValidException
    *
    */
   public function testGetStabilityForMethodThrowsExceptionForInvalidMethod() {
