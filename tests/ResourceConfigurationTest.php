@@ -1,6 +1,7 @@
 <?php
 
 use Drupal\restapi\ResourceConfiguration;
+use Drupal\restapi\Test\MockAnnotatedResource;
 
 
 /**
@@ -96,6 +97,112 @@ class ResourceConfigurationTest extends PHPUnit_Framework_TestCase {
     $config = new ResourceConfiguration('/path/to/resource', 'my_module', $this->class, $this->auth, '/myprefix/');
     $this->assertEquals('myprefix/path/to/resource', $config->getPath());
 
+  }
+
+
+  /**
+   * Ensures deprecation parsing works as expected.
+   *
+   * @dataProvider deprecatedAnnotationProvider
+   *
+   */
+  public function testGetDeprecationForMethod($method, $version, $reason) {
+
+    $config = new ResourceConfiguration('path/to/resource', 'my_module', MockAnnotatedResource::class, $this->auth);
+
+    $deprecation = $config->getDeprecationForMethod($method);
+
+    $this->assertInternalType('array', $deprecation);
+    $this->assertArrayHasKey('version', $deprecation);
+    $this->assertArrayHasKey('reason', $deprecation);
+    $this->assertEquals($version, $deprecation['version']);
+    $this->assertEquals($reason, $deprecation['reason']);
+  }
+
+
+  /**
+   * Ensures getDeprecationForMethod() returns NULL if the endpoint is not deprecated.
+   *
+   */
+  public function testGetDeprecationForMethodForUndeprecatedMethod() {
+
+    $config = new ResourceConfiguration('path/to/resource', 'my_module', MockAnnotatedResource::class, $this->auth);
+
+    $this->assertNull($config->getDeprecationForMethod('notDeprecated'));
+  }
+
+
+  /**
+   * Ensures getDeprecationForMethod() throws an exception if the method does not exist.
+   *
+   * @expectedException \Drupal\restapi\Exception\ClassMethodNotValidException
+   *
+   */
+  public function testGetDeprecationForMethodThrowsExceptionForInvalidMethod() {
+
+    $config = new ResourceConfiguration('path/to/resource', 'my_module', MockAnnotatedResource::class, $this->auth);
+
+    $this->assertNull($config->getDeprecationForMethod('invalidMethod'));
+  }
+
+
+  /**
+   * Ensures stability parsing works as expected.
+   *
+   * @dataProvider stabilityAnnotationProvider
+   *
+   */
+  public function testGetStabilityForMethod($method, $stability) {
+
+    $config = new ResourceConfiguration('path/to/resource', 'my_module', MockAnnotatedResource::class, $this->auth);
+
+    $this->assertEquals($stability, $config->getStabilityForMethod($method));
+  }
+
+
+  /**
+   * Ensures getStabilityForMethod() throws an exception if the method does not exist.
+   *
+   * @expectedException \Drupal\restapi\Exception\ClassMethodNotValidException
+   *
+   */
+  public function testGetStabilityForMethodThrowsExceptionForInvalidMethod() {
+
+    $config = new ResourceConfiguration('path/to/resource', 'my_module', MockAnnotatedResource::class, $this->auth);
+
+    $this->assertNull($config->getDeprecationForMethod('invalidMethod'));
+  }
+
+
+  /**
+   * Provides sample data for testing deprecation parsing.
+   *
+   */
+  public function deprecatedAnnotationProvider() {
+
+    //              method                               version  reason
+    $scenarios[] = ['deprecatedNoVersionNoReason',       NULL,    NULL];
+    $scenarios[] = ['deprecatedVersionNoReason',         1,       NULL];
+    $scenarios[] = ['deprecatedPrefixedVersionNoReason', 2,       NULL];
+    $scenarios[] = ['deprecatedVersionReason',           3,       'Example reason'];
+    $scenarios[] = ['deprecatedPrefixedVersionReason',   4,       'Example reason'];
+    $scenarios[] = ['deprecatedNoVersionReason',         NULL,    'Example reason'];
+
+    return $scenarios;
+  }
+
+
+  /**
+   * Provides sample data for testing stability parsing.
+   *
+   */
+  public function stabilityAnnotationProvider() {
+
+    //              method                   stability
+    $scenarios[] = ['stabilityNotSpecified', 'production'];
+    $scenarios[] = ['stabilitySpecified',    'prototype'];
+
+    return $scenarios;
   }
 
 }

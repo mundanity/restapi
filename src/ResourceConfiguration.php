@@ -4,7 +4,9 @@ namespace Drupal\restapi;
 
 use Drupal\restapi\Exception\ClassNotValidException;
 use Drupal\restapi\Exception\AuthClassNotValidException;
+use Drupal\restapi\Exception\ClassMethodNotValidException;
 use Psr\Http\Message\RequestInterface;
+use ReflectionClass;
 
 
 /**
@@ -212,6 +214,52 @@ class ResourceConfiguration implements ResourceConfigurationInterface {
    */
   public function matchesPath($path) {
     return ($this->getPath() == $path || preg_match($this->getMaskedPath(), $path));
+  }
+
+
+  /**
+   * {@inheritdoc}
+   *
+   */
+  public function getDeprecationForMethod($method) {
+    $class = new ReflectionClass($this->getClass());
+
+    if (!$class->hasMethod($method)) {
+      $message = sprintf('The %s method does not exist for the class %s', $method, $class);
+      throw new ClassMethodNotValidException($message);
+    }
+
+    $doc_comment = $class->getMethod($method)->getDocComment();
+    $deprecated  = preg_match('/\* @deprecated(?:\h+(?:[vV]?([0-9]+))?)?(?:\h+(.*)?)?$/m', $doc_comment, $matches);
+
+    if (!$deprecated) {
+      return NULL;
+    }
+
+    return [
+      'version' => isset($matches[1]) ? $matches[1] : NULL,
+      'reason'  => isset($matches[2]) ? $matches[2] : NULL,
+    ];
+  }
+
+
+  /**
+   * {@inheritdoc}
+   *
+   */
+  public function getStabilityForMethod($method) {
+
+    $class = new ReflectionClass($this->getClass());
+
+    if (!$class->hasMethod($method)) {
+      $message = sprintf('The %s method does not exist for the class %s', $method, $class);
+      throw new ClassMethodNotValidException($message);
+    }
+
+    $doc_comment = $class->getMethod($method)->getDocComment();
+    $stability   = preg_match('/\* @stability\h+(.*)/m', $doc_comment, $matches);
+
+    return $stability ? $matches[1] : 'production';
   }
 
 

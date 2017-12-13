@@ -3,6 +3,7 @@
 namespace Drupal\restapi;
 
 use Drupal\restapi\Auth\AuthenticationServiceInterface;
+use Drupal\restapi\Exception\ClassMethodNotValidException;
 use Psr\Http\Message\RequestInterface;
 use stdClass;
 
@@ -94,4 +95,59 @@ interface ResourceConfigurationInterface {
    *
    */
   public function matchesPath($path);
+
+
+  /**
+   * Retrieves the deprecation information for an endpoint.
+   *
+   * Deprecation can be specified on an endpoint method by using the @deprecated
+   * annotation. Examples:
+   *
+   * <code>
+   *   @deprecated v1 This endpoint is no longer necessary.
+   *   @deprecated 2
+   *   @deprecated This endpoint is no longer necessary.
+   *   @deprecated 3 This endpoint is no longer necessary.
+   * </code>
+   *
+   * @param string $method
+   *   The request method to check.
+   *
+   * @throws ClassMethodNotValidException
+   *   When the specified method does not exist on the resource.
+   *
+   * @return array|NULL
+   *   An associative array containing deprecation information if the
+   *   endpoint is deprecated, and NULL otherwise. Possible values are:
+   *     - version: the version the endpoint has been deprecated since
+   *     - reason: the reason the endpoint has been deprecated
+   *
+   */
+  public function getDeprecationForMethod($method);
+
+
+  /**
+   * Retrieves the stability information for an endpoint.
+   *
+   * Stability can be specified on an endpoint method by using the @stability
+   * annotation. Example:
+   *
+   * <code>
+   *   @stability prototype
+   * </code>
+   *
+   * If a stability is not explicitly specified, "production" will be assumed.
+   *
+   * @param string $method
+   *   The request method to check.
+   *
+   * @throws ClassMethodNotValidException
+   *   When the specified method does not exist on the resource.
+   *
+   * @return string
+   *   The stability of the endpoint.
+   *
+   */
+  public function getStabilityForMethod($method);
+
 }
