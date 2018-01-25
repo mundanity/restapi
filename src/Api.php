@@ -7,7 +7,6 @@ use Drupal\restapi\Exception\MissingParametersException;
 use Drupal\restapi\Exception\RestApiException;
 use Drupal\restapi\Exception\UnauthorizedException;
 use Exception;
-use Negotiation\Negotiator;
 use Psr\Http\Message\ResponseInterface;
 
 
@@ -181,7 +180,7 @@ class Api {
       }
     }
 
-    $response = $this->invokeHookResponse($path, $resource, $request, $response);
+    $response = restapi_invoke_hook_response($path, $resource, $request, $response);
     return $response;
   }
 
@@ -303,7 +302,7 @@ class Api {
 
 
   /**
-   * Helper method to invoke hook_restapi_response.
+   * Helper method to invoke hook_restapi_request.
    *
    * @param string $path
    *   The path.
@@ -327,35 +326,5 @@ class Api {
     }
 
     return $request;
-  }
-
-
-  /**
-   * Helper method to invoke hook_restapi_response.
-   *
-   * @param string $path
-   *   The path.
-   * @param ResourceConfigurationInterface $resource
-   *   The resource configuration.
-   * @param JsonRequest $request
-   *   The HTTP request.
-   * @param ResponseInterface $response
-   *   The HTTP response.
-   *
-   * @return JsonResponse
-   *
-   */
-  protected function invokeHookResponse($path, ResourceConfigurationInterface $resource, JsonRequest $request, ResponseInterface $response) {
-
-    foreach(module_implements('restapi_response') as $module) {
-      $func   = $module . '_restapi_response';
-      $result = $func($path, $resource, $request, $response);
-
-      if ($result instanceof ResponseInterface) {
-        $response = $result;
-      }
-    }
-
-    return $response;
   }
 }

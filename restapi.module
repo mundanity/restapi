@@ -281,14 +281,19 @@ function restapi_page_callback(ResourceConfigurationInterface $resource) {
 
   global $user;
 
-  $request = restapi_get_request();
-  $auth    = $resource->invokeAuthenticationService($user, $request);
+  $request  = restapi_get_request();
+  $path     = current_path();
+  $resource = restapi_get_resource($path);
+  $auth     = $resource->invokeAuthenticationService($user, $request);
 
   try {
     $account = $auth->authenticate();
   }
   catch (Exception $e) {
-    return restapi_invoke_hook_exception($e);
+    $response = restapi_invoke_hook_exception($e);
+    $response = restapi_invoke_hook_response($path, $resource, $request, $response);
+
+    return $response;
   }
 
   if (!$account) {
@@ -644,6 +649,36 @@ function restapi_invoke_hook_exception(Exception $e) {
   foreach(module_implements('restapi_exception') as $module) {
     $func   = $module . '_restapi_exception';
     $result = $func($e, $response);
+
+    if ($result instanceof ResponseInterface) {
+      $response = $result;
+    }
+  }
+
+  return $response;
+}
+
+
+/**
+ * Helper function to invoke hook_restapi_response.
+ *
+ * @param string $path
+ *   The path.
+ * @param ResourceConfigurationInterface $resource
+ *   The resource configuration.
+ * @param JsonRequest $request
+ *   The HTTP request.
+ * @param ResponseInterface $response
+ *   The HTTP response.
+ *
+ * @return ResponseInterface
+ *
+ */
+function restapi_invoke_hook_response($path, ResourceConfigurationInterface $resource, JsonRequest $request, ResponseInterface $response) {
+
+  foreach (module_implements('restapi_response') as $module) {
+    $func   = $module . '_restapi_response';
+    $result = $func($path, $resource, $request, $response);
 
     if ($result instanceof ResponseInterface) {
       $response = $result;
