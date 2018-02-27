@@ -133,12 +133,10 @@ class ResourceConfigurationTest extends PHPUnit_Framework_TestCase {
 
 
   /**
-   * Ensures getDeprecationForMethod() throws an exception if the method does not exist.
-   *
-   * @expectedException \Drupal\restapi\Exception\ClassMethodNotValidException
+   * Ensures getDeprecationForMethod() returns null if the method does not exist.
    *
    */
-  public function testGetDeprecationForMethodThrowsExceptionForInvalidMethod() {
+  public function testGetDeprecationForMethodReturnsNullForInvalidMethod() {
 
     $config = new ResourceConfiguration('path/to/resource', 'my_module', MockAnnotatedResource::class, $this->auth);
 
@@ -161,12 +159,10 @@ class ResourceConfigurationTest extends PHPUnit_Framework_TestCase {
 
 
   /**
-   * Ensures getStabilityForMethod() throws an exception if the method does not exist.
-   *
-   * @expectedException \Drupal\restapi\Exception\ClassMethodNotValidException
+   * Ensures getStabilityForMethod() returns null if the method does not exist.
    *
    */
-  public function testGetStabilityForMethodThrowsExceptionForInvalidMethod() {
+  public function testGetStabilityForMethodReturnsNullForInvalidMethod() {
 
     $config = new ResourceConfiguration('path/to/resource', 'my_module', MockAnnotatedResource::class, $this->auth);
 

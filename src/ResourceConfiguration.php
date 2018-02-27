@@ -225,8 +225,7 @@ class ResourceConfiguration implements ResourceConfigurationInterface {
     $class = new ReflectionClass($this->getClass());
 
     if (!$class->hasMethod($method)) {
-      $message = sprintf('The %s method does not exist for the class %s', $method, $class);
-      throw new ClassMethodNotValidException($message);
+      return NULL;
     }
 
     $doc_comment = $class->getMethod($method)->getDocComment();
@@ -252,8 +251,7 @@ class ResourceConfiguration implements ResourceConfigurationInterface {
     $class = new ReflectionClass($this->getClass());
 
     if (!$class->hasMethod($method)) {
-      $message = sprintf('The %s method does not exist for the class %s', $method, $class);
-      throw new ClassMethodNotValidException($message);
+      return NULL;
     }
 
     $doc_comment = $class->getMethod($method)->getDocComment();
