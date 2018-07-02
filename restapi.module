@@ -637,7 +637,7 @@ function restapi_get_url_prefix() {
 /**
  * Helper function to invoke hook_restapi_exception.
  *
- * @param Exception $e
+ * @param \Throwable $e
  *   The error or exception that is being thrown.
  *
  * @return ResponseInterface|NULL

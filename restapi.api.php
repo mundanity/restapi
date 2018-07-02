@@ -121,7 +121,7 @@ function hook_restapi_response($path, ResourceConfiguration $resource, JsonReque
  * parameter.
  *
  * @param \Throwable $e
- *   The error exception that was thrown.
+ *   The error or exception that was thrown.
  * @param ResponseInterface $response
  *   A ResponseInterface object, if a previous module has already responded to
  *   this exception.
