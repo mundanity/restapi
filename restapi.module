@@ -189,15 +189,15 @@ function restapi_restapi_response($path, ResourceConfigurationInterface $resourc
 /**
  * Implements hook_restapi_exception().
  *
- * @param Exception $e
- *   The exception to inspect.
+ * @param \Throwable $e
+ *   The error or exception to inspect.
  * @param ResponseInterface $response
  *   The ResponseInterface, if a previous module has generated one already.
  *
  * @return ResponseInterface|NULL
  *
  */
-function restapi_restapi_exception(Exception $e, ResponseInterface $response = NULL) {
+function restapi_restapi_exception(\Throwable $e, ResponseInterface $response = NULL) {
 
   if ($e instanceof RestApiException) {
     $data = [
@@ -638,12 +638,12 @@ function restapi_get_url_prefix() {
  * Helper function to invoke hook_restapi_exception.
  *
  * @param Exception $e
- *   The exception that is being thrown.
+ *   The error or exception that is being thrown.
  *
  * @return ResponseInterface|NULL
  *
  */
-function restapi_invoke_hook_exception(Exception $e) {
+function restapi_invoke_hook_exception(\Throwable $e) {
 
   $response = NULL;
 

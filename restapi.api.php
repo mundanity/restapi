@@ -113,15 +113,15 @@ function hook_restapi_response($path, ResourceConfiguration $resource, JsonReque
 
 
 /**
- * Allows for modification of the response depending on the exception thrown
- * while attempting to execute the request.
+ * Allows for modification of the response depending on the error or exception
+ * thrown while attempting to execute the request.
  *
  * If a previous module has already generated a ResponseInterface object based
  * on a specific exception, the response will be included as the second
  * parameter.
  *
- * @param Exception $e
- *   The exception that was thrown.
+ * @param \Throwable $e
+ *   The error exception that was thrown.
  * @param ResponseInterface $response
  *   A ResponseInterface object, if a previous module has already responded to
  *   this exception.
@@ -129,7 +129,7 @@ function hook_restapi_response($path, ResourceConfiguration $resource, JsonReque
  * @return ResponseInterface|NULL
  *
  */
-function hook_restapi_exception(Exception $e, ResponseInterface $response = NULL) {
+function hook_restapi_exception(\Throwable $e, ResponseInterface $response = NULL) {
 
   if ($e instanceof RestApiException) {
     $response = JsonResponse::create("This is my modified response");
