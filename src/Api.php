@@ -6,9 +6,10 @@ use Drupal\restapi\Exception\InvalidParametersException;
 use Drupal\restapi\Exception\MissingParametersException;
 use Drupal\restapi\Exception\RestApiException;
 use Drupal\restapi\Exception\UnauthorizedException;
+use Drupal\restapi\JsonResponse as RestapiJsonResponse;
 use Exception;
 use Psr\Http\Message\ResponseInterface;
-
+use Zend\Diactoros\Response\JsonResponse;
 
 /**
  * The API class. Allows for manipulation of the endpoints.
@@ -204,7 +205,7 @@ class Api {
       'error'   => $code,
       'message' => $message,
     ];
-    return JsonResponse::create($data, $status);
+    return RestapiJsonResponse::create($data, $status);
   }
 
 
@@ -273,13 +274,8 @@ class Api {
     if (method_exists($resource, 'access')) {
       $result = call_user_func_array([$resource, 'access'], $args);
 
-      if ($result === FALSE) {
-        throw new UnauthorizedException('You do not have permission to access this resource.');
-      }
-
-      if ($result instanceof JsonResponse) {
-        $body = json_decode((string) $result->getBody(), TRUE);
-        throw new RestApiException($body['message'], $result->getStatusCode(), NULL, $body['error']);
+      if ($result !== NULL) {
+          $this->returnAccessErrorResponse($result);
       }
     }
 
@@ -289,13 +285,8 @@ class Api {
     if ($access) {
       $result = call_user_func_array([$resource, $access], $args);
 
-      if ($result === FALSE) {
-        throw new UnauthorizedException('You do not have permission to access this resource.');
-      }
-
-      if ($result instanceof JsonResponse) {
-        $body = json_decode((string) $result->getBody(), TRUE);
-        throw new RestApiException($body['message'], $result->getStatusCode(), NULL, $body['error']);
+      if ($result !== NULL) {
+          $this->returnAccessErrorResponse($result);
       }
     }
   }
@@ -326,5 +317,33 @@ class Api {
     }
 
     return $request;
+  }
+
+  /**
+   * A helper method that throws appropriate exceptions based on the result of access check.
+   *
+   * @param mixed $result
+   *   The result received from the access check(s).
+   *
+   * @throws RestApiException
+   *   Thrown when an error response was returned.
+   * @throws UnauthorizedException
+   *   Thrown when the access check resulted in an explicit false being returned.
+   *
+   */
+  protected function returnAccessErrorResponse($result) {
+
+    if ($result === FALSE) {
+      throw new UnauthorizedException('You do not have permission to access this resource.');
+    }
+
+    if ($result instanceof JsonResponse) {
+      $body = json_decode((string) $result->getBody(), TRUE);
+      $error = isset($body['error']) ? $body['error'] : 'system';
+      throw new RestApiException($body['message'], $result->getStatusCode(), NULL, $error);
+    }
+    elseif ($result instanceof ResponseInterface) {
+      throw new RestApiException((string) $result->getBody(), $result->getStatusCode());
+    }
   }
 }
