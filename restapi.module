@@ -390,7 +390,8 @@ function restapi_delivery_callback($response) {
   $accept      = $request->getHeaderLine('Accept');
   // @see: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
   $is_download = stripos($response->getHeaderLine('Content-Disposition'), 'attachment') !== FALSE;
-  if ($accept && !$is_download) {
+  $is_json     = preg_match('/^application\/json\+?/', $response->getHeaderLine('Content-Type'));
+  if ($accept && !$is_download && $is_json) {
 
     $negotiator = new Negotiator();
     $priorities = ['application/json', 'text/html'];
