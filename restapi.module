@@ -388,9 +388,16 @@ function restapi_delivery_callback($response) {
   // For requests in the browser, we'll try to show the output in a more
   // pleasant way.
   $accept      = $request->getHeaderLine('Accept');
+
   // @see: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
   $is_download = stripos($response->getHeaderLine('Content-Disposition'), 'attachment') !== FALSE;
-  $is_json     = preg_match('/^application\/json\+?/', $response->getHeaderLine('Content-Type'));
+
+  // Only display JSON responses in this manner.
+  $is_json = preg_match('/^application\/(?:(?:.+)\+){0,1}json$/', $response->getHeaderLine('Content-Type'));
+
+  // Even though it's incorrect, support the common form of application/json+hal
+  $is_json = $is_json || $respponse->getHeaderLine('Content-Type') === 'application/json+hal';
+
   if ($accept && !$is_download && $is_json) {
 
     $negotiator = new Negotiator();
